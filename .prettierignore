@@ -1,0 +1,13 @@
+# Generated, installed or binary output
+node_modules
+dist
+.next
+.next-preview
+coverage
+package-lock.json
+*.min.js
+# Prose and agent instructions keep their own line breaks
+*.md
+.claude
+# Embedded image data (base64), not code
+apps/api/src/email/art.ts

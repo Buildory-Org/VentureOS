@@ -1,7 +1,17 @@
 "use client";
 import { forwardRef } from "react";
 import { HugeiconsIcon, type HugeiconsIconProps, type IconSvgElement } from "@hugeicons/react";
-import { CalendarClockIcon, Delete02Icon, Flag01Icon, Globe02Icon, LockIcon, NotebookPenIcon, Package01Icon, PhoneIcon, Task01Icon } from "@hugeicons/core-free-icons";
+import {
+  CalendarClockIcon,
+  Delete02Icon,
+  Flag01Icon,
+  Globe02Icon,
+  LockIcon,
+  NotebookPenIcon,
+  Package01Icon,
+  PhoneIcon,
+  Task01Icon,
+} from "@hugeicons/core-free-icons";
 
 // Icons the shared set (components/ui/icons.tsx) does not export yet; same wrapper and stroke weight.
 type IconProps = Omit<HugeiconsIconProps, "icon">;

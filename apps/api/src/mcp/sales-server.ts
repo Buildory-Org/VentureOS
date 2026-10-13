@@ -22,7 +22,11 @@ export const SALES_SERVER_TITLE = "Dealflow Sales";
 export function registerSalesServer(server: McpServer, ctx: ToolContext): void {
   const look = lookups(ctx);
   // The Studio connector's "read the venture context first" reminder does not apply here: the venture's sales brain is read with get_brain.
-  const tool = makeRegister(server, ctx, { contextReminder: false, cards: { builders: CARD_BUILDERS }, refusal: (_name, input, error) => refusalGuide(ctx.origin, input, error.status, error.message) });
+  const tool = makeRegister(server, ctx, {
+    contextReminder: false,
+    cards: { builders: CARD_BUILDERS },
+    refusal: (_name, input, error) => refusalGuide(ctx.origin, input, error.status, error.message),
+  });
   registerLookupTools(tool, ctx, look, "sales");
   registerSalesTools(tool, ctx, look);
   registerOfferTools(tool, ctx, look);
@@ -30,9 +34,12 @@ export function registerSalesServer(server: McpServer, ctx: ToolContext): void {
   registerSearchTools(tool, ctx, look);
   // The one page that draws every card, for chat apps that support MCP Apps.
   (server as unknown as { registerResource: (...args: unknown[]) => unknown }).registerResource(
-    "dealflow-sales-card", CARD_URI,
+    "dealflow-sales-card",
+    CARD_URI,
     { title: "Dealflow Sales card", description: "Draws a tool's result as a card in the chat.", mimeType: CARD_MIME },
-    async () => ({ contents: [{ uri: CARD_URI, mimeType: CARD_MIME, text: CARD_HTML, _meta: { ui: { prefersBorder: false } } }] }),
+    async () => ({
+      contents: [{ uri: CARD_URI, mimeType: CARD_MIME, text: CARD_HTML, _meta: { ui: { prefersBorder: false } } }],
+    }),
   );
 }
 
@@ -40,14 +47,53 @@ export function registerSalesServer(server: McpServer, ctx: ToolContext): void {
 export function registerSalesPrompts(server: McpServer, scopes: Set<string>): void {
   // Like tools, a prompt is only offered when the token can run the tools it names.
   const prompt = (name: string, needs: string[], title: string, description: string, text: string) => {
-    if (needs.every((scope) => scopes.has(scope))) server.registerPrompt(name, { title, description }, () => ({ messages: [{ role: "user" as const, content: { type: "text" as const, text } }] }));
+    if (needs.every((scope) => scopes.has(scope)))
+      server.registerPrompt(name, { title, description }, () => ({
+        messages: [{ role: "user" as const, content: { type: "text" as const, text } }],
+      }));
   };
-  prompt("sales", ["sales:read"], "Start sales", "Start the sales workflow: what needs me, and what to do next", "Start sales: call start_sales, greet me, show me today, and lead me step by step with its numbered options. Show it as a visual, not prose (a card, an artifact on claude.ai, a compact table in a terminal). Never send anything: I send from my own mail or phone.");
-  prompt("review_drafts", ["sales:read", "sales:write"], "Review drafts", "Review waiting sales drafts, in this fresh conversation", "Use start_sales with mode review, then list_drafts with status in_review and my sessionId. Skip any draft marked yours. For each of the others read the lead's verdict (get_lead) and its offer's packet (get_offer: message rules, approved claims and proof words, claims to avoid), then pass it or fail it with exact issues using review_draft. Never rewrite a draft. Finish with how many passed, how many need fixes, and what needs a person.");
-  prompt("find_leads", ["sales:read", "sales:write"], "Find leads", "Find new companies for a venture", "Start sales if you haven't, then ask me in one question which area and what kind of business to look for (and which offer, if the venture sells several; get_offer gives its places, industries and signals). Check find_leads so you don't re-add known companies, then use search_companies to find real ones, show me the best few, and add the ones I pick with add_leads. If search isn't set up, offer to write the search down with plan_find_run instead.");
-  prompt("todays_calls", ["sales:read"], "Today's calls", "Who to call today, with an opening for each", "Start sales if you haven't, then show me who I should call today: the calls due first, then the leads approved for contact, with the opening signal and the number for each (get_lead). Show it as a compact table or visual, not prose, and ask which one to start with. After each call I'll tell you how it went, and you log it with log_call.");
-  prompt("weekly_review", ["sales:read"], "Weekly review", "What moved this week, what is stuck, what to change", "Do the weekly sales review: call weekly_report (every lead in my ventures, the last 7 days) and list_plays for how each play is doing. Present it as a visual report (tiles for the numbers, a table for the plays), never as prose. Say plainly when the numbers are too small to conclude anything. Suggest at most three changes (its `next` questions), each tied to evidence, and offer to save each one as a proposal for the owner to approve: changes to an offer with propose_offer, shared notes with propose_brain_change.");
-  prompt("daybreak", ["sales:read", "sales:write"], "Run my morning", "Daybreak: work through this morning's sales list", "Run my morning: call daybreak, do its `then` plan in order, then show the summary as an artifact/table and ask what to do first.");
+  prompt(
+    "sales",
+    ["sales:read"],
+    "Start sales",
+    "Start the sales workflow: what needs me, and what to do next",
+    "Start sales: call start_sales, greet me, show me today, and lead me step by step with its numbered options. Show it as a visual, not prose (a card, an artifact on claude.ai, a compact table in a terminal). Never send anything: I send from my own mail or phone.",
+  );
+  prompt(
+    "review_drafts",
+    ["sales:read", "sales:write"],
+    "Review drafts",
+    "Review waiting sales drafts, in this fresh conversation",
+    "Use start_sales with mode review, then list_drafts with status in_review and my sessionId. Skip any draft marked yours. For each of the others read the lead's verdict (get_lead) and its offer's packet (get_offer: message rules, approved claims and proof words, claims to avoid), then pass it or fail it with exact issues using review_draft. Never rewrite a draft. Finish with how many passed, how many need fixes, and what needs a person.",
+  );
+  prompt(
+    "find_leads",
+    ["sales:read", "sales:write"],
+    "Find leads",
+    "Find new companies for a venture",
+    "Start sales if you haven't, then ask me in one question which area and what kind of business to look for (and which offer, if the venture sells several; get_offer gives its places, industries and signals). Check find_leads so you don't re-add known companies, then use search_companies to find real ones, show me the best few, and add the ones I pick with add_leads. If search isn't set up, offer to write the search down with plan_find_run instead.",
+  );
+  prompt(
+    "todays_calls",
+    ["sales:read"],
+    "Today's calls",
+    "Who to call today, with an opening for each",
+    "Start sales if you haven't, then show me who I should call today: the calls due first, then the leads approved for contact, with the opening signal and the number for each (get_lead). Show it as a compact table or visual, not prose, and ask which one to start with. After each call I'll tell you how it went, and you log it with log_call.",
+  );
+  prompt(
+    "weekly_review",
+    ["sales:read"],
+    "Weekly review",
+    "What moved this week, what is stuck, what to change",
+    "Do the weekly sales review: call weekly_report (every lead in my ventures, the last 7 days) and list_plays for how each play is doing. Present it as a visual report (tiles for the numbers, a table for the plays), never as prose. Say plainly when the numbers are too small to conclude anything. Suggest at most three changes (its `next` questions), each tied to evidence, and offer to save each one as a proposal for the owner to approve: changes to an offer with propose_offer, shared notes with propose_brain_change.",
+  );
+  prompt(
+    "daybreak",
+    ["sales:read", "sales:write"],
+    "Run my morning",
+    "Daybreak: work through this morning's sales list",
+    "Run my morning: call daybreak, do its `then` plan in order, then show the summary as an artifact/table and ask what to do first.",
+  );
 }
 
 /** What every chat that connects reads first. Kept under 2,000 characters, in order of what matters most; tool descriptions carry the rest. */

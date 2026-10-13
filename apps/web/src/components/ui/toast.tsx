@@ -33,8 +33,16 @@ let focused = false;
 let hiddenTab = false;
 const updatePaused = () => setPaused(hovered || focused || hiddenTab);
 const listeners = new Set<() => void>();
-const emit = () => { items = [...items]; listeners.forEach((listener) => listener()); };
-const subscribe = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
+const emit = () => {
+  items = [...items];
+  listeners.forEach((listener) => listener());
+};
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
 const snapshot = () => items;
 const empty: ToastItem[] = [];
 
@@ -54,9 +62,22 @@ export function toast(input: ToastInput) {
     emit();
     return id;
   }
-  const item: ToastItem = { tone: "success", ...input, id, leaving: false, remaining: input.duration ?? 4000, startedAt: 0, timer: 0 };
+  const item: ToastItem = {
+    tone: "success",
+    ...input,
+    id,
+    leaving: false,
+    remaining: input.duration ?? 4000,
+    startedAt: 0,
+    timer: 0,
+  };
   items = [item, ...items];
-  items.filter((entry) => !entry.leaving).slice(MAX_VISIBLE).forEach((entry) => { if (!entry.sticky) beginLeave(entry); });
+  items
+    .filter((entry) => !entry.leaving)
+    .slice(MAX_VISIBLE)
+    .forEach((entry) => {
+      if (!entry.sticky) beginLeave(entry);
+    });
   schedule(item);
   emit();
   return id;
@@ -66,13 +87,16 @@ function beginLeave(item: ToastItem, reason: "action" | "dismissed" = "dismissed
   window.clearTimeout(item.timer);
   item.leaving = true;
   item.onClose?.(reason);
-  window.setTimeout(() => {
-    items = items.filter((entry) => entry !== item);
-    // Browsers do not always report blur when the focused toast is removed.
-    focused = Boolean(document.activeElement?.closest("[data-toast-region]"));
-    updatePaused();
-    emit();
-  }, prefersReducedMotion() ? 0 : EXIT_MS);
+  window.setTimeout(
+    () => {
+      items = items.filter((entry) => entry !== item);
+      // Browsers do not always report blur when the focused toast is removed.
+      focused = Boolean(document.activeElement?.closest("[data-toast-region]"));
+      updatePaused();
+      emit();
+    },
+    prefersReducedMotion() ? 0 : EXIT_MS,
+  );
 }
 
 export function dismissToast(id: string, reason: "action" | "dismissed" = "dismissed") {
@@ -87,34 +111,105 @@ function setPaused(next: boolean) {
   paused = next;
   for (const item of items) {
     if (item.sticky || item.leaving) continue;
-    if (next) { window.clearTimeout(item.timer); item.remaining = Math.max(800, item.remaining - (Date.now() - item.startedAt)); }
-    else schedule(item);
+    if (next) {
+      window.clearTimeout(item.timer);
+      item.remaining = Math.max(800, item.remaining - (Date.now() - item.startedAt));
+    } else schedule(item);
   }
 }
 
 const icons = { success: Check, info: Info, error: CircleAlert };
-const iconTones = { success: "bg-success-surface text-success-text", info: "bg-primary-100 text-primary-700", error: "bg-danger-surface text-danger-text" };
+const iconTones = {
+  success: "bg-success-surface text-success-text",
+  info: "bg-primary-100 text-primary-700",
+  error: "bg-danger-surface text-danger-text",
+};
 
 /** One stack at the top right. Toasts slide in from the right edge, newest on top, and pause while hovered or the tab is hidden. */
 export function ToastRegion() {
   const list = useSyncExternalStore(subscribe, snapshot, () => empty);
   useEffect(() => {
-    const onVisibility = () => { hiddenTab = document.visibilityState === "hidden"; updatePaused(); };
+    const onVisibility = () => {
+      hiddenTab = document.visibilityState === "hidden";
+      updatePaused();
+    };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
-  return <section data-toast-region aria-label="Notifications" className="pointer-events-none fixed right-3 top-16 z-[70] flex w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:right-5" onMouseEnter={() => { hovered = true; updatePaused(); }} onMouseLeave={() => { hovered = false; updatePaused(); }} onFocusCapture={() => { focused = true; updatePaused(); }} onBlurCapture={(event) => { focused = event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget); updatePaused(); }}>
-    {list.map((item) => {
-      const Icon = icons[item.tone ?? "success"];
-      return <div key={item.id} data-leaving={item.leaving} className="vso-toast-row">
-        <div className="pb-2"><div className="vso-toast pointer-events-auto">
-          {item.node ?? <div role={item.tone === "error" ? "alert" : "status"} className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left shadow-[0_12px_34px_rgba(38,38,55,.16)]">
-            <span className={clsx("grid h-8 w-8 shrink-0 place-items-center rounded-lg", iconTones[item.tone ?? "success"])}><Icon size={16} /></span>
-            <div className="min-w-0 flex-1 pt-0.5">{item.title && <p className="break-words text-sm font-semibold text-neutral-800">{item.title}</p>}{item.body && <p className="mt-0.5 break-words text-xs leading-5 text-neutral-500">{item.body}</p>}{item.action && <button type="button" onClick={() => { item.action!.onClick(); dismissToast(item.id, "action"); }} className="mt-2 inline-flex min-h-8 items-center rounded-lg bg-primary-50 px-2.5 text-xs font-semibold text-primary-700 transition-[background-color,transform] duration-150 hover:bg-primary-100 active:scale-[0.97]">{item.action.label}</button>}</div>
-            <button type="button" onClick={() => dismissToast(item.id)} aria-label="Dismiss" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-700"><X size={14} /></button>
-          </div>}
-        </div></div>
-      </div>;
-    })}
-  </section>;
+  return (
+    <section
+      data-toast-region
+      aria-label="Notifications"
+      className="pointer-events-none fixed right-3 top-16 z-[70] flex w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:right-5"
+      onMouseEnter={() => {
+        hovered = true;
+        updatePaused();
+      }}
+      onMouseLeave={() => {
+        hovered = false;
+        updatePaused();
+      }}
+      onFocusCapture={() => {
+        focused = true;
+        updatePaused();
+      }}
+      onBlurCapture={(event) => {
+        focused = event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget);
+        updatePaused();
+      }}
+    >
+      {list.map((item) => {
+        const Icon = icons[item.tone ?? "success"];
+        return (
+          <div key={item.id} data-leaving={item.leaving} className="vso-toast-row">
+            <div className="pb-2">
+              <div className="vso-toast pointer-events-auto">
+                {item.node ?? (
+                  <div
+                    role={item.tone === "error" ? "alert" : "status"}
+                    className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left shadow-[0_12px_34px_rgba(38,38,55,.16)]"
+                  >
+                    <span
+                      className={clsx(
+                        "grid h-8 w-8 shrink-0 place-items-center rounded-lg",
+                        iconTones[item.tone ?? "success"],
+                      )}
+                    >
+                      <Icon size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      {item.title && <p className="break-words text-sm font-semibold text-neutral-800">{item.title}</p>}
+                      {item.body && (
+                        <p className="mt-0.5 break-words text-xs leading-5 text-neutral-500">{item.body}</p>
+                      )}
+                      {item.action && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            item.action!.onClick();
+                            dismissToast(item.id, "action");
+                          }}
+                          className="mt-2 inline-flex min-h-8 items-center rounded-lg bg-primary-50 px-2.5 text-xs font-semibold text-primary-700 transition-[background-color,transform] duration-150 hover:bg-primary-100 active:scale-[0.97]"
+                        >
+                          {item.action.label}
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => dismissToast(item.id)}
+                      aria-label="Dismiss"
+                      className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-700"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
 }

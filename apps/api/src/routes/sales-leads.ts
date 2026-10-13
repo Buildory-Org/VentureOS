@@ -1,7 +1,21 @@
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { z } from "zod";
-import { activityInputSchema, activityReplyTypeInputSchema, deliveryWorkInputSchema, idSchema, leadFacetsQuerySchema, leadListQuerySchema, pipelineValueQuerySchema, opportunityInputSchema, timezoneSchema, updateOpportunitySchema, verdictInputSchema, verdictOverrideInputSchema, whatsappOptInInputSchema } from "@venture-studio/contracts";
+import {
+  activityInputSchema,
+  activityReplyTypeInputSchema,
+  deliveryWorkInputSchema,
+  idSchema,
+  leadFacetsQuerySchema,
+  leadListQuerySchema,
+  pipelineValueQuerySchema,
+  opportunityInputSchema,
+  timezoneSchema,
+  updateOpportunitySchema,
+  verdictInputSchema,
+  verdictOverrideInputSchema,
+  whatsappOptInInputSchema,
+} from "@venture-studio/contracts";
 import { atomic, type Database } from "../db.js";
 import { AppError } from "../errors.js";
 import { jsonValue } from "../json.js";
@@ -9,7 +23,18 @@ import { canWriteIn, forbidClaude, forbidden, isHeadOf, notFound } from "../sale
 import { auditSales, salesCtx, settingsFor } from "../sales/ctx.js";
 import { approvalNeed } from "../sales/drafts.js";
 import { createDeliveryWork } from "../sales/delivery.js";
-import { applyActivity, applyReplyType, createLead, discardOpenDrafts, loadLead, markHandled, payloadHash, requireLeadEditor, stageNote, updateLead } from "../sales/leads.js";
+import {
+  applyActivity,
+  applyReplyType,
+  createLead,
+  discardOpenDrafts,
+  loadLead,
+  markHandled,
+  payloadHash,
+  requireLeadEditor,
+  stageNote,
+  updateLead,
+} from "../sales/leads.js";
 import { leadJson, present } from "../sales/present.js";
 import { pipelineValue } from "../sales/revenue.js";
 import { notifyNeedsYou } from "../sales/notify.js";
@@ -18,8 +43,18 @@ import { buildOverview, leadFacets, listInbox, listLeads } from "../sales/querie
 import { isPreContactStage, normalizeStage, planOverride, planVerdict } from "../sales/rules.js";
 import { SALES_TZ } from "../sales/workdays.js";
 
-const overviewQuerySchema = z.object({ ventureId: idSchema.optional(), owner: z.union([z.literal("me"), idSchema]).optional(), offerId: z.union([idSchema, z.literal("none")]).optional(), tz: timezoneSchema.optional() });
-const inboxQuerySchema = z.object({ ventureId: idSchema.optional(), handled: z.enum(["true", "false"]).optional(), owner: z.union([z.literal("me"), idSchema]).optional(), limit: z.coerce.number().int().min(1).max(200).default(50) });
+const overviewQuerySchema = z.object({
+  ventureId: idSchema.optional(),
+  owner: z.union([z.literal("me"), idSchema]).optional(),
+  offerId: z.union([idSchema, z.literal("none")]).optional(),
+  tz: timezoneSchema.optional(),
+});
+const inboxQuerySchema = z.object({
+  ventureId: idSchema.optional(),
+  handled: z.enum(["true", "false"]).optional(),
+  owner: z.union([z.literal("me"), idSchema]).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
 const ok = (data: unknown) => ({ ok: true, data });
 
 /** Leads and everything on them: overview, list, detail, edit, delete, activities, inbox, verdicts and delivery work. */
@@ -29,7 +64,16 @@ export function salesLeadRoutes(database: Database): Router {
 
   router.get("/overview", async (req, res) => {
     const query = overviewQuerySchema.parse(req.query);
-    res.json(ok(await buildOverview(salesCtx(database, req), { ventureId: query.ventureId, owner: query.owner, offerId: query.offerId, tz: query.tz })));
+    res.json(
+      ok(
+        await buildOverview(salesCtx(database, req), {
+          ventureId: query.ventureId,
+          owner: query.owner,
+          offerId: query.offerId,
+          tz: query.tz,
+        }),
+      ),
+    );
   });
 
   router.get("/leads", async (req, res) => {
@@ -44,7 +88,15 @@ export function salesLeadRoutes(database: Database): Router {
   // The pipeline in money for the Overview: open and weighted value, the forecast by expected close month, won this month.
   router.get("/pipeline-value", async (req, res) => {
     const query = pipelineValueQuerySchema.parse(req.query);
-    res.json(ok(await pipelineValue(salesCtx(database, req), { ...(query.ventureId ? { ventureId: query.ventureId } : {}), ...(query.owner ? { owner: query.owner } : {}), tz: query.tz ?? SALES_TZ })));
+    res.json(
+      ok(
+        await pipelineValue(salesCtx(database, req), {
+          ...(query.ventureId ? { ventureId: query.ventureId } : {}),
+          ...(query.owner ? { owner: query.owner } : {}),
+          tz: query.tz ?? SALES_TZ,
+        }),
+      ),
+    );
   });
 
   router.post("/leads", async (req, res) => {
@@ -63,9 +115,30 @@ export function salesLeadRoutes(database: Database): Router {
     ]);
     // Drafts carry the same approval flags as the Review lists, so the drawer can show Approve to the right people.
     const settings = await settingsFor(ctx, String(lead.ventureId));
-    const playIds = [...new Set(drafts.map((draft) => draft.playId).filter((id): id is string => typeof id === "string"))];
-    const plays = new Map(playIds.length ? (await db.collection("sales_plays").find({ _id: { $in: playIds }, workspaceId: ctx.workspaceId }).toArray()).map((play) => [String(play._id), play]) : []);
-    res.json(ok({ lead: leadJson(lead), activities: activities.map(present), drafts: drafts.map((draft) => ({ ...present(draft), ...approvalNeed(draft, plays.get(String(draft.playId)), settings) })), verdicts: verdicts.map(present) }));
+    const playIds = [
+      ...new Set(drafts.map((draft) => draft.playId).filter((id): id is string => typeof id === "string")),
+    ];
+    const plays = new Map(
+      playIds.length
+        ? (
+            await db
+              .collection("sales_plays")
+              .find({ _id: { $in: playIds }, workspaceId: ctx.workspaceId })
+              .toArray()
+          ).map((play) => [String(play._id), play])
+        : [],
+    );
+    res.json(
+      ok({
+        lead: leadJson(lead),
+        activities: activities.map(present),
+        drafts: drafts.map((draft) => ({
+          ...present(draft),
+          ...approvalNeed(draft, plays.get(String(draft.playId)), settings),
+        })),
+        verdicts: verdicts.map(present),
+      }),
+    );
   });
 
   router.patch("/leads/:id", async (req, res) => {
@@ -79,12 +152,21 @@ export function salesLeadRoutes(database: Database): Router {
     const ctx = salesCtx(database, req);
     const lead = await loadLead(ctx, idSchema.parse(req.params.id));
     const beforeFirstContact = isPreContactStage(normalizeStage(lead.stage)) && !lead.lastTouchAt;
-    if (!isHeadOf(ctx.actor, lead.ventureId) && !(canWriteIn(ctx.actor, lead.ventureId) && lead.ownerId === ctx.actor.id && beforeFirstContact)) {
+    if (
+      !isHeadOf(ctx.actor, lead.ventureId) &&
+      !(canWriteIn(ctx.actor, lead.ventureId) && lead.ownerId === ctx.actor.id && beforeFirstContact)
+    ) {
       throw forbidden("Only a venture head or admin can delete a lead (its owner can until the first contact)");
     }
     const now = new Date();
     await atomic(database, async (session) => {
-      const result = await db.collection("opportunities").updateOne({ _id: lead._id, workspaceId: ctx.workspaceId, deletedAt: null }, { $set: { deletedAt: now, deletedBy: ctx.actor.id, updatedAt: now } }, { session });
+      const result = await db
+        .collection("opportunities")
+        .updateOne(
+          { _id: lead._id, workspaceId: ctx.workspaceId, deletedAt: null },
+          { $set: { deletedAt: now, deletedBy: ctx.actor.id, updatedAt: now } },
+          { session },
+        );
       if (!result.matchedCount) throw notFound("Lead");
       await discardOpenDrafts(ctx, String(lead._id), "all", "The lead was deleted", now, session);
       await auditSales(ctx, "sales.lead.delete", "lead", String(lead._id), String(lead.ventureId), undefined, session);
@@ -102,48 +184,113 @@ export function salesLeadRoutes(database: Database): Router {
     const hash = payloadHash({ ...input, requestId: undefined });
     const replay = async () => {
       if (!input.requestId) return null;
-      const prior = await db.collection("sales_activities").findOne({ workspaceId: ctx.workspaceId, leadId: id, requestId: input.requestId });
+      const prior = await db
+        .collection("sales_activities")
+        .findOne({ workspaceId: ctx.workspaceId, leadId: id, requestId: input.requestId });
       if (!prior) return null;
-      if (prior.payloadHash && prior.payloadHash !== hash) throw new AppError(409, "CONFLICT", "That requestId was already used for a different activity: use a new requestId for new content");
+      if (prior.payloadHash && prior.payloadHash !== hash)
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "That requestId was already used for a different activity: use a new requestId for new content",
+        );
       return { activity: present(prior), lead: leadJson((await db.collection("opportunities").findOne({ _id: id }))!) };
     };
     const replayed = await replay();
-    if (replayed) { res.json(ok(replayed)); return; }
-    if (input.draftId && !await db.collection("sales_drafts").findOne({ _id: input.draftId, workspaceId: ctx.workspaceId, leadId: id }, { projection: { _id: 1 } })) throw new AppError(400, "BAD_REQUEST", "That draft does not belong to this lead");
+    if (replayed) {
+      res.json(ok(replayed));
+      return;
+    }
+    if (
+      input.draftId &&
+      !(await db
+        .collection("sales_drafts")
+        .findOne({ _id: input.draftId, workspaceId: ctx.workspaceId, leadId: id }, { projection: { _id: 1 } }))
+    )
+      throw new AppError(400, "BAD_REQUEST", "That draft does not belong to this lead");
     const now = new Date();
     let activity;
     try {
       activity = await atomic(database, async (session) => {
         const fresh = await loadLead(ctx, id, session);
         const result = await applyActivity(ctx, fresh, input, now, session);
-        await auditSales(ctx, "sales.activity.log", "activity", String(result.activity._id), String(fresh.ventureId), { kind: input.kind, direction: String(result.activity.direction ?? "none"), ...(input.replyType ? { replyType: input.replyType } : {}), ...(input.callOutcome ? { callOutcome: input.callOutcome } : {}), ...(result.stageTo ? { stageTo: result.stageTo } : {}) }, session);
+        await auditSales(
+          ctx,
+          "sales.activity.log",
+          "activity",
+          String(result.activity._id),
+          String(fresh.ventureId),
+          {
+            kind: input.kind,
+            direction: String(result.activity.direction ?? "none"),
+            ...(input.replyType ? { replyType: input.replyType } : {}),
+            ...(input.callOutcome ? { callOutcome: input.callOutcome } : {}),
+            ...(result.stageTo ? { stageTo: result.stageTo } : {}),
+          },
+          session,
+        );
         return result.activity;
       });
     } catch (error) {
-      if ((error as { code?: number }).code === 11000) { const raced = await replay(); if (raced) { res.json(ok(raced)); return; } }
+      if ((error as { code?: number }).code === 11000) {
+        const raced = await replay();
+        if (raced) {
+          res.json(ok(raced));
+          return;
+        }
+      }
       throw error;
     }
-    res.status(201).json(ok({ activity: present(activity), lead: leadJson((await db.collection("opportunities").findOne({ _id: id }))!) }));
+    res
+      .status(201)
+      .json(
+        ok({
+          activity: present(activity),
+          lead: leadJson((await db.collection("opportunities").findOne({ _id: id }))!),
+        }),
+      );
   });
 
   // Sorts an inbound reply into one of the reply types after the fact: the type's rules apply as if it had been logged with it.
   router.patch("/activities/:id", async (req, res) => {
     const ctx = salesCtx(database, req);
-    const activity = await db.collection("sales_activities").findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
+    const activity = await db
+      .collection("sales_activities")
+      .findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
     if (!activity) throw notFound("Activity");
     const lead = await loadLead(ctx, String(activity.leadId));
     requireLeadEditor(ctx, lead, "set the reply type on this lead's messages");
     const { replyType } = activityReplyTypeInputSchema.parse(req.body);
     if (activity.direction !== "in") throw new AppError(400, "BAD_REQUEST", "Only inbound messages have a reply type");
-    const current = async () => ok({ activity: present((await db.collection("sales_activities").findOne({ _id: activity._id }))!), lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!) });
-    if (activity.replyType === replyType) { res.json(await current()); return; }
+    const current = async () =>
+      ok({
+        activity: present((await db.collection("sales_activities").findOne({ _id: activity._id }))!),
+        lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!),
+      });
+    if (activity.replyType === replyType) {
+      res.json(await current());
+      return;
+    }
     // An opt-out (or hostile reply) put the company on the do-not-contact list: that is only ever undone from the list itself.
-    if (activity.replyType === "opt_out" || activity.replyType === "hostile") throw new AppError(409, "CONFLICT", `This reply was marked ${activity.replyType}: the company is on the do-not-contact list, and a venture head removes it from there`);
+    if (activity.replyType === "opt_out" || activity.replyType === "hostile")
+      throw new AppError(
+        409,
+        "CONFLICT",
+        `This reply was marked ${activity.replyType}: the company is on the do-not-contact list, and a venture head removes it from there`,
+      );
     const now = new Date();
     await atomic(database, async (session) => {
       const fresh = await loadLead(ctx, String(lead._id), session);
       const result = await applyReplyType(ctx, fresh, activity, replyType, now, session);
-      await auditSales(ctx, "sales.activity.reply_type", "activity", String(activity._id), String(lead.ventureId), { replyType, ...(result.stageTo ? { stageTo: result.stageTo } : {}) }, session);
+      await auditSales(
+        ctx,
+        "sales.activity.reply_type",
+        "activity",
+        String(activity._id),
+        String(lead.ventureId),
+        { replyType, ...(result.stageTo ? { stageTo: result.stageTo } : {}) },
+        session,
+      );
     });
     res.json(await current());
   });
@@ -151,7 +298,9 @@ export function salesLeadRoutes(database: Database): Router {
   // Clears an inbound item from the Inbox.
   router.post("/activities/:id/handled", async (req, res) => {
     const ctx = salesCtx(database, req);
-    const activity = await db.collection("sales_activities").findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
+    const activity = await db
+      .collection("sales_activities")
+      .findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
     if (!activity) throw notFound("Activity");
     const lead = await loadLead(ctx, String(activity.leadId));
     requireLeadEditor(ctx, lead, "clear this from the Inbox");
@@ -161,7 +310,16 @@ export function salesLeadRoutes(database: Database): Router {
       const now = new Date();
       await atomic(database, async (session) => {
         const { optIn } = await markHandled(ctx, lead, activity, now, session);
-        if (!activity.handledAt || optIn) await auditSales(ctx, "sales.activity.handled", "activity", String(activity._id), String(activity.ventureId), optIn ? { whatsappOptIn: true } : undefined, session);
+        if (!activity.handledAt || optIn)
+          await auditSales(
+            ctx,
+            "sales.activity.handled",
+            "activity",
+            String(activity._id),
+            String(activity.ventureId),
+            optIn ? { whatsappOptIn: true } : undefined,
+            session,
+          );
       });
     }
     res.json(ok(present((await db.collection("sales_activities").findOne({ _id: activity._id }))!)));
@@ -182,9 +340,24 @@ export function salesLeadRoutes(database: Database): Router {
     // Claude does not overrule a person: a verdict a person saved or overrode, or a lead waiting for a person's decision, is not replaced by Claude.
     if (ctx.via === "claude") {
       const current = lead.verdict as { overridden?: boolean; via?: string } | undefined;
-      if (current?.overridden) throw new AppError(409, "CONFLICT", "A person overrode the current verdict on this lead: Claude cannot replace it. Ask a person to review it in the app");
-      if (current?.via === "app") throw new AppError(409, "CONFLICT", "A person set the current verdict on this lead: Claude cannot replace it. Ask a person to review it in the app");
-      if (lead.needsYou) throw new AppError(409, "CONFLICT", "This lead is waiting for a person's decision (needs you): Claude cannot save a new verdict until a person has decided");
+      if (current?.overridden)
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "A person overrode the current verdict on this lead: Claude cannot replace it. Ask a person to review it in the app",
+        );
+      if (current?.via === "app")
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "A person set the current verdict on this lead: Claude cannot replace it. Ask a person to review it in the app",
+        );
+      if (lead.needsYou)
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "This lead is waiting for a person's decision (needs you): Claude cannot save a new verdict until a person has decided",
+        );
     }
     const offer = await verdictOffer(ctx, lead, input.offerId);
     const now = new Date();
@@ -192,45 +365,162 @@ export function salesLeadRoutes(database: Database): Router {
     const plan = planVerdict(lead, input, verdictId, now, { via: ctx.via, actorId: ctx.actor.id });
     if (offer.setOnLead) plan.set.offerId = offer.offerId;
     const verdict = {
-      _id: verdictId, workspaceId: ctx.workspaceId, ventureId: lead.ventureId, leadId: lead._id, createdBy: ctx.actor.id, via: ctx.via, createdAt: now, ...input, ...(offer.offerId ? { offerId: offer.offerId } : {}),
-      evidence: input.evidence.map((item) => ({ ...item, ...(item.seenAt ? { seenAt: new Date(item.seenAt) } : {}) })), ...(input.signalSeenAt ? { signalSeenAt: new Date(input.signalSeenAt) } : {}),
+      _id: verdictId,
+      workspaceId: ctx.workspaceId,
+      ventureId: lead.ventureId,
+      leadId: lead._id,
+      createdBy: ctx.actor.id,
+      via: ctx.via,
+      createdAt: now,
+      ...input,
+      ...(offer.offerId ? { offerId: offer.offerId } : {}),
+      evidence: input.evidence.map((item) => ({ ...item, ...(item.seenAt ? { seenAt: new Date(item.seenAt) } : {}) })),
+      ...(input.signalSeenAt ? { signalSeenAt: new Date(input.signalSeenAt) } : {}),
     };
     await atomic(database, async (session) => {
       await db.collection("sales_verdicts").insertOne(verdict, { session });
-      await db.collection("opportunities").updateOne({ _id: lead._id, workspaceId: ctx.workspaceId }, { $set: { ...plan.set, updatedAt: now }, ...(plan.unset.length ? { $unset: Object.fromEntries(plan.unset.map((field) => [field, ""])) } : {}) }, { session });
+      await db
+        .collection("opportunities")
+        .updateOne(
+          { _id: lead._id, workspaceId: ctx.workspaceId },
+          {
+            $set: { ...plan.set, updatedAt: now },
+            ...(plan.unset.length ? { $unset: Object.fromEntries(plan.unset.map((field) => [field, ""])) } : {}),
+          },
+          { session },
+        );
       if (plan.stageTo) {
-        await stageNote(ctx, lead, plan.stageFrom, plan.stageTo, "system", now, session, `Stage: ${plan.stageFrom} -> ${plan.stageTo} after Claude's verdict (${input.decision})`);
-        await discardOpenDrafts(ctx, String(lead._id), plan.discardDrafts, `Lead moved to ${plan.stageTo}`, now, session);
+        await stageNote(
+          ctx,
+          lead,
+          plan.stageFrom,
+          plan.stageTo,
+          "system",
+          now,
+          session,
+          `Stage: ${plan.stageFrom} -> ${plan.stageTo} after Claude's verdict (${input.decision})`,
+        );
+        await discardOpenDrafts(
+          ctx,
+          String(lead._id),
+          plan.discardDrafts,
+          `Lead moved to ${plan.stageTo}`,
+          now,
+          session,
+        );
       }
       // The lead just landed in "needs you": its owner is told (once while it stays there).
-      if (plan.set.needsYou === true && lead.needsYou !== true) await notifyNeedsYou(ctx, lead, verdictId, `${input.decision}, ${input.confidence} confidence: ${input.summary}`, now, session);
-      await auditSales(ctx, "sales.verdict.save", "verdict", verdictId, String(lead.ventureId), { decision: input.decision, confidence: input.confidence, needsYou: Boolean(plan.set.needsYou), ...(offer.offerId ? { offerId: offer.offerId } : {}), ...(plan.stageTo ? { stageTo: plan.stageTo } : {}) }, session);
+      if (plan.set.needsYou === true && lead.needsYou !== true)
+        await notifyNeedsYou(
+          ctx,
+          lead,
+          verdictId,
+          `${input.decision}, ${input.confidence} confidence: ${input.summary}`,
+          now,
+          session,
+        );
+      await auditSales(
+        ctx,
+        "sales.verdict.save",
+        "verdict",
+        verdictId,
+        String(lead.ventureId),
+        {
+          decision: input.decision,
+          confidence: input.confidence,
+          needsYou: Boolean(plan.set.needsYou),
+          ...(offer.offerId ? { offerId: offer.offerId } : {}),
+          ...(plan.stageTo ? { stageTo: plan.stageTo } : {}),
+        },
+        session,
+      );
     });
-    res.status(201).json(ok({ verdict: present(verdict), lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!) }));
+    res
+      .status(201)
+      .json(
+        ok({
+          verdict: present(verdict),
+          lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!),
+        }),
+      );
   });
 
   // A person's override with a reason. Claude cannot override: it would clear its own needs-you flag.
   router.post("/verdicts/:id/override", async (req, res) => {
     const ctx = salesCtx(database, req);
-    const verdict = await db.collection("sales_verdicts").findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
+    const verdict = await db
+      .collection("sales_verdicts")
+      .findOne({ _id: idSchema.parse(req.params.id), workspaceId: ctx.workspaceId });
     if (!verdict) throw notFound("Verdict");
     const lead = await loadLead(ctx, String(verdict.leadId));
     forbidClaude(ctx.via, "Overriding a verdict");
     requireLeadEditor(ctx, lead, "override the verdict on this lead");
     const input = verdictOverrideInputSchema.parse(req.body);
-    if ((lead.verdict as { verdictId?: string } | undefined)?.verdictId !== String(verdict._id)) throw new AppError(409, "CONFLICT", "Only the latest verdict of a lead can be overridden");
+    if ((lead.verdict as { verdictId?: string } | undefined)?.verdictId !== String(verdict._id))
+      throw new AppError(409, "CONFLICT", "Only the latest verdict of a lead can be overridden");
     const now = new Date();
-    const plan = planOverride(lead, lead.verdict as Record<string, unknown>, input.decision, input.reason, now, ctx.actor.id);
+    const plan = planOverride(
+      lead,
+      lead.verdict as Record<string, unknown>,
+      input.decision,
+      input.reason,
+      now,
+      ctx.actor.id,
+    );
     await atomic(database, async (session) => {
-      await db.collection("sales_verdicts").updateOne({ _id: verdict._id }, { $set: { override: { decision: input.decision, reason: input.reason, by: ctx.actor.id, at: now } } }, { session });
-      await db.collection("opportunities").updateOne({ _id: lead._id, workspaceId: ctx.workspaceId }, { $set: { ...plan.set, updatedAt: now }, ...(plan.unset.length ? { $unset: Object.fromEntries(plan.unset.map((field) => [field, ""])) } : {}) }, { session });
+      await db
+        .collection("sales_verdicts")
+        .updateOne(
+          { _id: verdict._id },
+          { $set: { override: { decision: input.decision, reason: input.reason, by: ctx.actor.id, at: now } } },
+          { session },
+        );
+      await db
+        .collection("opportunities")
+        .updateOne(
+          { _id: lead._id, workspaceId: ctx.workspaceId },
+          {
+            $set: { ...plan.set, updatedAt: now },
+            ...(plan.unset.length ? { $unset: Object.fromEntries(plan.unset.map((field) => [field, ""])) } : {}),
+          },
+          { session },
+        );
       if (plan.stageTo) {
-        await stageNote(ctx, lead, plan.stageFrom, plan.stageTo, "app", now, session, `Stage: ${plan.stageFrom} -> ${plan.stageTo} after the verdict was overridden (${input.decision})`);
-        await discardOpenDrafts(ctx, String(lead._id), plan.discardDrafts, `Lead moved to ${plan.stageTo}`, now, session);
+        await stageNote(
+          ctx,
+          lead,
+          plan.stageFrom,
+          plan.stageTo,
+          "app",
+          now,
+          session,
+          `Stage: ${plan.stageFrom} -> ${plan.stageTo} after the verdict was overridden (${input.decision})`,
+        );
+        await discardOpenDrafts(
+          ctx,
+          String(lead._id),
+          plan.discardDrafts,
+          `Lead moved to ${plan.stageTo}`,
+          now,
+          session,
+        );
       }
-      await auditSales(ctx, "sales.verdict.override", "verdict", String(verdict._id), String(lead.ventureId), { decision: input.decision, ...(plan.stageTo ? { stageTo: plan.stageTo } : {}) }, session);
+      await auditSales(
+        ctx,
+        "sales.verdict.override",
+        "verdict",
+        String(verdict._id),
+        String(lead.ventureId),
+        { decision: input.decision, ...(plan.stageTo ? { stageTo: plan.stageTo } : {}) },
+        session,
+      );
     });
-    res.json(ok({ verdict: present((await db.collection("sales_verdicts").findOne({ _id: verdict._id }))!), lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!) }));
+    res.json(
+      ok({
+        verdict: present((await db.collection("sales_verdicts").findOne({ _id: verdict._id }))!),
+        lead: leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!),
+      }),
+    );
   });
 
   // WhatsApp consent is a person's to record: they messaged us, said yes on a call, or said yes by email. Claude never records it.
@@ -240,18 +530,42 @@ export function salesLeadRoutes(database: Database): Router {
     forbidClaude(ctx.via, "Recording a lead's WhatsApp consent");
     requireLeadEditor(ctx, lead, "record WhatsApp consent for this lead");
     const input = whatsappOptInInputSchema.parse(req.body);
-    if (lead.doNotContact) throw new AppError(409, "CONFLICT", "This lead is on the do-not-contact list: it cannot be opted in to WhatsApp");
+    if (lead.doNotContact)
+      throw new AppError(409, "CONFLICT", "This lead is on the do-not-contact list: it cannot be opted in to WhatsApp");
     if (input.activityId) {
-      const activity = await db.collection("sales_activities").findOne({ _id: input.activityId, workspaceId: ctx.workspaceId, leadId: String(lead._id) });
-      const yesOnCall = activity?.kind === "call" && activity.callOutcome === "yes_whatsapp" && input.how === "yes_on_call";
-      const theyMessaged = activity?.kind === "whatsapp" && activity.direction === "in" && input.how === "they_messaged";
-      if (!yesOnCall && !theyMessaged) throw new AppError(400, "BAD_REQUEST", "activityId must be this lead's call logged as yes_whatsapp (how yes_on_call) or an inbound WhatsApp message (how they_messaged)");
+      const activity = await db
+        .collection("sales_activities")
+        .findOne({ _id: input.activityId, workspaceId: ctx.workspaceId, leadId: String(lead._id) });
+      const yesOnCall =
+        activity?.kind === "call" && activity.callOutcome === "yes_whatsapp" && input.how === "yes_on_call";
+      const theyMessaged =
+        activity?.kind === "whatsapp" && activity.direction === "in" && input.how === "they_messaged";
+      if (!yesOnCall && !theyMessaged)
+        throw new AppError(
+          400,
+          "BAD_REQUEST",
+          "activityId must be this lead's call logged as yes_whatsapp (how yes_on_call) or an inbound WhatsApp message (how they_messaged)",
+        );
     }
     if (!lead.whatsappOptIn) {
       const now = new Date();
       await atomic(database, async (session) => {
-        await db.collection("opportunities").updateOne({ _id: lead._id, workspaceId: ctx.workspaceId, whatsappOptIn: null }, { $set: { whatsappOptIn: { at: now, by: ctx.actor.id, how: input.how }, updatedAt: now } }, { session });
-        await auditSales(ctx, "sales.lead.whatsapp_opt_in", "lead", String(lead._id), String(lead.ventureId), { how: input.how, ...(input.activityId ? { activityId: input.activityId } : {}) }, session);
+        await db
+          .collection("opportunities")
+          .updateOne(
+            { _id: lead._id, workspaceId: ctx.workspaceId, whatsappOptIn: null },
+            { $set: { whatsappOptIn: { at: now, by: ctx.actor.id, how: input.how }, updatedAt: now } },
+            { session },
+          );
+        await auditSales(
+          ctx,
+          "sales.lead.whatsapp_opt_in",
+          "lead",
+          String(lead._id),
+          String(lead.ventureId),
+          { how: input.how, ...(input.activityId ? { activityId: input.activityId } : {}) },
+          session,
+        );
       });
     }
     res.json(ok(leadJson((await db.collection("opportunities").findOne({ _id: lead._id }))!)));

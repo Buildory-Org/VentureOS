@@ -12,13 +12,20 @@ export function detectDelimiter(text: string): string {
   let quoted = false;
   for (let index = 0; index < text.length; index++) {
     const char = text[index]!;
-    if (char === '"') { quoted = !quoted; continue; }
+    if (char === '"') {
+      quoted = !quoted;
+      continue;
+    }
     if (!quoted && (char === "\n" || char === "\r")) break;
     if (!quoted && counts.has(char)) counts.set(char, counts.get(char)! + 1);
   }
   let best = ",";
   let most = 0;
-  for (const [delimiter, count] of counts) if (count > most) { best = delimiter; most = count; }
+  for (const [delimiter, count] of counts)
+    if (count > most) {
+      best = delimiter;
+      most = count;
+    }
   return best;
 }
 
@@ -33,22 +40,53 @@ export function parseCsv(input: string, delimiter = detectDelimiter(input)): str
   let cell = "";
   let quoted = false;
   let started = false;
-  const endCell = () => { row.push(cell); cell = ""; if (row.length > MAX_COLUMNS) throw new AppError(400, "BAD_REQUEST", `The file has more than ${MAX_COLUMNS} columns: is it a CSV?`); };
-  const endRow = () => { endCell(); if (row.some((value) => value.trim() !== "")) rows.push(row); row = []; started = false; };
+  const endCell = () => {
+    row.push(cell);
+    cell = "";
+    if (row.length > MAX_COLUMNS)
+      throw new AppError(400, "BAD_REQUEST", `The file has more than ${MAX_COLUMNS} columns: is it a CSV?`);
+  };
+  const endRow = () => {
+    endCell();
+    if (row.some((value) => value.trim() !== "")) rows.push(row);
+    row = [];
+    started = false;
+  };
   for (let index = 0; index < text.length; index++) {
     const char = text[index]!;
     if (quoted) {
-      if (char === '"') { if (text[index + 1] === '"') { cell += '"'; index++; } else quoted = false; }
-      else cell += char;
+      if (char === '"') {
+        if (text[index + 1] === '"') {
+          cell += '"';
+          index++;
+        } else quoted = false;
+      } else cell += char;
       continue;
     }
-    if (char === '"' && !started) { quoted = true; started = true; continue; }
-    if (char === delimiter) { endCell(); started = false; continue; }
-    if (char === "\r" || char === "\n") { if (char === "\r" && text[index + 1] === "\n") index++; endRow(); continue; }
+    if (char === '"' && !started) {
+      quoted = true;
+      started = true;
+      continue;
+    }
+    if (char === delimiter) {
+      endCell();
+      started = false;
+      continue;
+    }
+    if (char === "\r" || char === "\n") {
+      if (char === "\r" && text[index + 1] === "\n") index++;
+      endRow();
+      continue;
+    }
     cell += char;
     started = true;
   }
-  if (quoted) throw new AppError(400, "BAD_REQUEST", `The file has a quote that never closes, near row ${rows.length + 1}: check it in a spreadsheet and save it as CSV again`);
+  if (quoted)
+    throw new AppError(
+      400,
+      "BAD_REQUEST",
+      `The file has a quote that never closes, near row ${rows.length + 1}: check it in a spreadsheet and save it as CSV again`,
+    );
   if (cell !== "" || row.length > 0) endRow();
   return rows;
 }
@@ -58,7 +96,8 @@ export function parseCsv(input: string, delimiter = detectDelimiter(input)): str
  * carriage return, the full-width ＝ ＋ － ＠, and anything that starts with a space, a no-break space or a zero-width character (some
  * programs skip those before deciding).
  */
-const FORMULA_START = /^[=+\-@\t\r \u00a0\u1680\u2000-\u200f\u2028\u2029\u202f\u205f\u2060-\u2064\u3000\ufeff\uff0b\uff0d\uff1d\uff20]/;
+const FORMULA_START =
+  /^[=+\-@\t\r \u00a0\u1680\u2000-\u200f\u2028\u2029\u202f\u205f\u2060-\u2064\u3000\ufeff\uff0b\uff0d\uff1d\uff20]/;
 
 /** One cell for a CSV file: quoted when it holds a comma, quote or line break (quotes doubled), and defused when a spreadsheet would run it. */
 export function csvCell(value: unknown): string {

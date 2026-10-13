@@ -35,10 +35,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="Inventory"
-        subtitle="Stock levels, batches and transfers across 3 warehouses"
-      >
+      <PageHeader title="Inventory" subtitle="Stock levels, batches and transfers across 3 warehouses">
         <Dropdown
           align="right"
           items={[
@@ -66,11 +63,7 @@ function Inner() {
 
       {tab === "stock" && (
         <Anim delay={130} className="space-y-4">
-          <AlertStrip
-            tone="warning"
-            text="8 items below reorder level · 3 batches expiring <30d"
-            cta="View alerts"
-          />
+          <AlertStrip tone="warning" text="8 items below reorder level · 3 batches expiring <30d" cta="View alerts" />
           <DataTable
             cols={[
               { key: "sku", label: "SKU" },
@@ -86,10 +79,18 @@ function Inner() {
             rows={stock.map((s) => ({
               id: s.sku,
               cells: [
-                <span key="k" className="font-mono text-[11.5px] font-bold text-primary-600">{s.sku}</span>,
-                <span key="i" className="font-bold text-neutral-900">{s.item}</span>,
-                s.whs, s.inHand, s.reserved,
-                <span key="a" className="font-bold">{s.avail}</span>,
+                <span key="k" className="font-mono text-[11.5px] font-bold text-primary-600">
+                  {s.sku}
+                </span>,
+                <span key="i" className="font-bold text-neutral-900">
+                  {s.item}
+                </span>,
+                s.whs,
+                s.inHand,
+                s.reserved,
+                <span key="a" className="font-bold">
+                  {s.avail}
+                </span>,
                 s.reorder,
                 <StatusChip key="s" label={s.status} tone={s.tone as Tone} />,
                 inr(s.val),
@@ -124,8 +125,12 @@ function Inner() {
             rows={stockAlerts.map((a) => ({
               id: a.sku + a.issue,
               cells: [
-                <span key="k" className="font-mono text-[11.5px] font-bold text-primary-600">{a.sku}</span>,
-                <span key="i" className="font-bold text-neutral-900">{a.item}</span>,
+                <span key="k" className="font-mono text-[11.5px] font-bold text-primary-600">
+                  {a.sku}
+                </span>,
+                <span key="i" className="font-bold text-neutral-900">
+                  {a.item}
+                </span>,
                 a.issue,
                 <StatusChip key="s" label={a.sev === "danger" ? "Critical" : "Warning"} tone={a.sev as Tone} />,
               ],
@@ -154,8 +159,13 @@ function Inner() {
             rows={transfers.map((t) => ({
               id: t.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{t.id}</span>,
-                t.from, t.to, t.items, t.date,
+                <span key="i" className="font-bold text-primary-600">
+                  {t.id}
+                </span>,
+                t.from,
+                t.to,
+                t.items,
+                t.date,
                 <StatusChip key="s" label={t.status} tone={t.tone as Tone} />,
               ],
               menu: [
@@ -180,7 +190,9 @@ function Inner() {
                   </span>
                   <div>
                     <p className="text-[13.5px] font-bold text-neutral-900">{w.name}</p>
-                    <p className="text-[11px] font-medium text-neutral-400">{w.id} · {w.manager}</p>
+                    <p className="text-[11px] font-medium text-neutral-400">
+                      {w.id} · {w.manager}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-4 flex items-end justify-between">

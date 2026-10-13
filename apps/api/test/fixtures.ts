@@ -7,7 +7,9 @@ export function makePdf(pages: string[][]): Buffer {
     const content = `BT /F1 12 Tf 72 720 Td 16 TL ${lines.map((line) => `(${escape(line)}) Tj T*`).join(" ")} ET`;
     const pageNumber = objects.length + 1;
     kids.push(`${pageNumber} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${pageNumber + 1} 0 R /Resources << /Font << /F1 FONT 0 R >> >> >>`);
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${pageNumber + 1} 0 R /Resources << /Font << /F1 FONT 0 R >> >> >>`,
+    );
     objects.push(`<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream`);
   }
   objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
@@ -29,11 +31,24 @@ export function makePdf(pages: string[][]): Buffer {
 export function makeZip(content: Buffer, declaredSize: number): Buffer {
   const name = Buffer.from("word/document.xml");
   const local = Buffer.alloc(30);
-  local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt32LE(content.length, 18); local.writeUInt32LE(declaredSize, 22); local.writeUInt16LE(name.length, 26);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt32LE(content.length, 18);
+  local.writeUInt32LE(declaredSize, 22);
+  local.writeUInt16LE(name.length, 26);
   const central = Buffer.alloc(46);
-  central.writeUInt32LE(0x02014b50, 0); central.writeUInt16LE(20, 4); central.writeUInt16LE(20, 6); central.writeUInt32LE(content.length, 20); central.writeUInt32LE(declaredSize, 24); central.writeUInt16LE(name.length, 28);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt32LE(content.length, 20);
+  central.writeUInt32LE(declaredSize, 24);
+  central.writeUInt16LE(name.length, 28);
   const body = Buffer.concat([local, name, content]);
   const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(1, 8); end.writeUInt16LE(1, 10); end.writeUInt32LE(46 + name.length, 12); end.writeUInt32LE(body.length, 16);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(46 + name.length, 12);
+  end.writeUInt32LE(body.length, 16);
   return Buffer.concat([body, central, name, end]);
 }

@@ -23,8 +23,25 @@ export function SetupBanner({ ventureId, ventureName }: { ventureId: string; ven
   const { ready, known, done } = readiness(data);
   if (!known || ready) return null;
   const name = ventureName || shell?.ventureName(ventureId) || "This venture";
-  return <div role="note" className="mb-4 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-warning-surface px-3.5 py-2.5 text-xs font-medium leading-5 text-warning-text">
-    <CircleAlert size={15} className="shrink-0" aria-hidden="true" />
-    <p className="min-w-0 flex-1">{name} isn&apos;t set up for sales yet — <span className="tnum">{done} of {SETUP_TOTAL}</span> done · <WorkspaceLink href={`/sales/live/setup?venture=${encodeURIComponent(ventureId)}`} className="font-bold underline underline-offset-2 hover:opacity-80">Set up</WorkspaceLink></p>
-  </div>;
+  return (
+    <div
+      role="note"
+      className="mb-4 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-warning-surface px-3.5 py-2.5 text-xs font-medium leading-5 text-warning-text"
+    >
+      <CircleAlert size={15} className="shrink-0" aria-hidden="true" />
+      <p className="min-w-0 flex-1">
+        {name} isn&apos;t set up for sales yet —{" "}
+        <span className="tnum">
+          {done} of {SETUP_TOTAL}
+        </span>{" "}
+        done ·{" "}
+        <WorkspaceLink
+          href={`/sales/live/setup?venture=${encodeURIComponent(ventureId)}`}
+          className="font-bold underline underline-offset-2 hover:opacity-80"
+        >
+          Set up
+        </WorkspaceLink>
+      </p>
+    </div>
+  );
 }

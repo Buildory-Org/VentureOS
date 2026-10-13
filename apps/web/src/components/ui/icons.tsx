@@ -101,10 +101,7 @@ import {
 type IconProps = Omit<HugeiconsIconProps, "icon">;
 
 function icon(svg: IconSvgElement) {
-  return forwardRef<SVGSVGElement, IconProps>(function StudioIcon(
-    { strokeWidth = 1.8, ...props },
-    ref,
-  ) {
+  return forwardRef<SVGSVGElement, IconProps>(function StudioIcon({ strokeWidth = 1.8, ...props }, ref) {
     return <HugeiconsIcon ref={ref} icon={svg} strokeWidth={strokeWidth} {...props} />;
   });
 }

@@ -5,4 +5,10 @@ import { DoNotContactScreen } from "@/screens/sales/do-not-contact";
 
 export const metadata: Metadata = { title: "Do not contact — Sales — Venture Studio OS" };
 
-export default function Page() { return <Suspense fallback={<SalesFallback />}><DoNotContactScreen /></Suspense>; }
+export default function Page() {
+  return (
+    <Suspense fallback={<SalesFallback />}>
+      <DoNotContactScreen />
+    </Suspense>
+  );
+}

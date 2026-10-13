@@ -30,10 +30,17 @@ export type CelebrationFacts = {
 export function celebrationFacts(feed: CelebrationFeed, now: Date): CelebrationFacts {
   const lead = feed.items[feed.items.length - 1];
   return {
-    first: feed.name.split(/\s+/)[0] ?? "", count: feed.items.length, early: lead?.minutesEarly, firstTime: Boolean(lead?.firstTimeRight),
-    reviewer: lead?.approvedBy?.name.split(/\s+/)[0], streak: feed.stats.onTimeStreak, finished: feed.stats.finished, thisWeek: feed.stats.thisWeek,
+    first: feed.name.split(/\s+/)[0] ?? "",
+    count: feed.items.length,
+    early: lead?.minutesEarly,
+    firstTime: Boolean(lead?.firstTimeRight),
+    reviewer: lead?.approvedBy?.name.split(/\s+/)[0],
+    streak: feed.stats.onTimeStreak,
+    finished: feed.stats.finished,
+    thisWeek: feed.stats.thisWeek,
     big: (lead?.estimatedMinutes ?? 0) >= 240 || lead?.priority === "high" || lead?.priority === "urgent",
-    hour: now.getHours(), weekday: now.getDay(),
+    hour: now.getHours(),
+    weekday: now.getDay(),
   };
 }
 
@@ -171,13 +178,71 @@ const LINES: Line[] = [
 ];
 
 /** Big single words for the montage's quick cuts. */
-const HYPE = ["SHIPPED", "NAILED IT", "DONE", "BOOM", "CLEAN", "SHARP", "LOCKED IN", "CRUSHED IT", "SORTED", "ON POINT", "DELIVERED", "BANG ON", "BULLSEYE", "TEXTBOOK", "SMOOTH", "SOLID", "FLAWLESS", "NEXT LEVEL", "LEGEND", "UNSTOPPABLE", "LET'S GO", "BIG WIN", "WRAPPED", "HANDLED", "IN THE BAG", "STELLAR", "PRO MOVE", "ELITE", "ON FIRE", "MVP", "CRISP", "NO NOTES", "HUGE", "ICONIC", "BRAVO", "WELL DONE", "YES!", "THAT'S IT", "SEALED", "TOP TIER", "CLUTCH", "SLICK", "SPOT ON", "WINNING", "GAME ON", "MAGIC", "PURE CLASS", "LEVEL UP"];
+const HYPE = [
+  "SHIPPED",
+  "NAILED IT",
+  "DONE",
+  "BOOM",
+  "CLEAN",
+  "SHARP",
+  "LOCKED IN",
+  "CRUSHED IT",
+  "SORTED",
+  "ON POINT",
+  "DELIVERED",
+  "BANG ON",
+  "BULLSEYE",
+  "TEXTBOOK",
+  "SMOOTH",
+  "SOLID",
+  "FLAWLESS",
+  "NEXT LEVEL",
+  "LEGEND",
+  "UNSTOPPABLE",
+  "LET'S GO",
+  "BIG WIN",
+  "WRAPPED",
+  "HANDLED",
+  "IN THE BAG",
+  "STELLAR",
+  "PRO MOVE",
+  "ELITE",
+  "ON FIRE",
+  "MVP",
+  "CRISP",
+  "NO NOTES",
+  "HUGE",
+  "ICONIC",
+  "BRAVO",
+  "WELL DONE",
+  "YES!",
+  "THAT'S IT",
+  "SEALED",
+  "TOP TIER",
+  "CLUTCH",
+  "SLICK",
+  "SPOT ON",
+  "WINNING",
+  "GAME ON",
+  "MAGIC",
+  "PURE CLASS",
+  "LEVEL UP",
+];
 
 /** The last word on screen. */
 const SIGNOFFS: Line[] = [
-  { text: "Onward." }, { text: "Keep going." }, { text: "On to the next." }, { text: "More of this." }, { text: "Stay sharp." },
-  { text: "Keep shipping." }, { text: "Proud of this one." }, { text: "Keep it rolling." }, { text: "Well played." },
-  { text: "Go get the next one." }, { text: "That's the way." }, { text: "Again tomorrow?" },
+  { text: "Onward." },
+  { text: "Keep going." },
+  { text: "On to the next." },
+  { text: "More of this." },
+  { text: "Stay sharp." },
+  { text: "Keep shipping." },
+  { text: "Proud of this one." },
+  { text: "Keep it rolling." },
+  { text: "Well played." },
+  { text: "Go get the next one." },
+  { text: "That's the way." },
+  { text: "Again tomorrow?" },
   { text: "Keep the streak alive.", when: (facts) => facts.streak >= 2 },
   { text: "Now rest.", when: night },
   { text: "Have a great weekend.", when: (facts) => facts.weekday === 5 },
@@ -187,22 +252,27 @@ const SIGNOFFS: Line[] = [
 export function spellDuration(minutes: number) {
   const value = Math.abs(minutes);
   if (value < 90) return `${Math.max(1, Math.round(value))} minute${Math.round(value) === 1 ? "" : "s"}`;
-  if (value < 36 * 60) { const hours = Math.round(value / 60); return `${hours} hour${hours === 1 ? "" : "s"}`; }
+  if (value < 36 * 60) {
+    const hours = Math.round(value / 60);
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
+  }
   const days = Math.round(value / 1440);
   return `${days} day${days === 1 ? "" : "s"}`;
 }
 
 function fill(text: string, facts: CelebrationFacts) {
-  return text
-    .replaceAll("{first}", facts.first || "you")
-    .replaceAll("{early}", spellDuration(facts.early ?? 0))
-    .replaceAll("{reviewer}", facts.reviewer ?? "Your reviewer")
-    .replaceAll("{streak}", String(facts.streak))
-    .replaceAll("{n}", String(facts.finished))
-    .replaceAll("{week}", String(facts.thisWeek))
-    .replaceAll("{count}", String(facts.count))
-    // A sentence never starts with a lower-case name placeholder's fallback.
-    .replace(/^you\b/, "You");
+  return (
+    text
+      .replaceAll("{first}", facts.first || "you")
+      .replaceAll("{early}", spellDuration(facts.early ?? 0))
+      .replaceAll("{reviewer}", facts.reviewer ?? "Your reviewer")
+      .replaceAll("{streak}", String(facts.streak))
+      .replaceAll("{n}", String(facts.finished))
+      .replaceAll("{week}", String(facts.thisWeek))
+      .replaceAll("{count}", String(facts.count))
+      // A sentence never starts with a lower-case name placeholder's fallback.
+      .replace(/^you\b/, "You")
+  );
 }
 
 /** One item, at random, weighted toward the ones that fit what happened, leaving out recent ones when it can. */
@@ -212,7 +282,10 @@ function pick(lines: Line[], facts: CelebrationFacts, random: () => number, rece
   const pool = fresh.length ? fresh : fitting;
   const weights = pool.map((line) => (line.when ? 3 : 1));
   let roll = random() * weights.reduce((sum, weight) => sum + weight, 0);
-  for (let index = 0; index < pool.length; index++) { roll -= weights[index]!; if (roll <= 0) return pool[index]!; }
+  for (let index = 0; index < pool.length; index++) {
+    roll -= weights[index]!;
+    if (roll <= 0) return pool[index]!;
+  }
   return pool[pool.length - 1]!;
 }
 
@@ -223,7 +296,8 @@ function factPunches(facts: CelebrationFacts) {
   else if (isOnTime(facts)) punches.push("RIGHT ON TIME");
   if (facts.firstTime) punches.push("FIRST TRY");
   if (facts.streak >= 2) punches.push(`${facts.streak} IN A ROW`);
-  if (MILESTONES.has(facts.finished) || facts.finished === 1) punches.push(facts.finished === 1 ? "YOUR FIRST" : `#${facts.finished}`);
+  if (MILESTONES.has(facts.finished) || facts.finished === 1)
+    punches.push(facts.finished === 1 ? "YOUR FIRST" : `#${facts.finished}`);
   if (facts.count >= 2) punches.push(`${facts.count} DONE`);
   if (facts.thisWeek >= 3) punches.push(`${facts.thisWeek} THIS WEEK`);
   return punches;
@@ -233,23 +307,44 @@ function factPunches(facts: CelebrationFacts) {
 export function writeCelebration(facts: CelebrationFacts, random: () => number, recent: Set<string>) {
   const line = pick(LINES, facts, random, recent);
   const signoff = pick(SIGNOFFS, facts, random, recent);
-  const punches = factPunches(facts).sort(() => random() - 0.5).slice(0, 2);
+  const punches = factPunches(facts)
+    .sort(() => random() - 0.5)
+    .slice(0, 2);
   const hype = HYPE.filter((word) => !recent.has(word)).sort(() => random() - 0.5);
   const fallback = HYPE.filter((word) => !hype.includes(word)).sort(() => random() - 0.5);
   const words = [...hype, ...fallback].filter((word) => !punches.includes(word)).slice(0, 4 - punches.length);
   // Facts land on the second and fourth cuts, the hype words around them.
-  const cuts = punches.length === 2 ? [words[0]!, punches[0]!, words[1]!, punches[1]!] : punches.length === 1 ? [words[0]!, words[1]!, punches[0]!, words[2]!] : words;
-  return { cuts, line: fill(line.text, facts), signoff: fill(signoff.text, facts), used: [line.text, signoff.text, ...words] };
+  const cuts =
+    punches.length === 2
+      ? [words[0]!, punches[0]!, words[1]!, punches[1]!]
+      : punches.length === 1
+        ? [words[0]!, words[1]!, punches[0]!, words[2]!]
+        : words;
+  return {
+    cuts,
+    line: fill(line.text, facts),
+    signoff: fill(signoff.text, facts),
+    used: [line.text, signoff.text, ...words],
+  };
 }
 
 const RECENT_KEY = "vso-celebration-recent";
 /** Lines and words this browser has seen lately (the newest sixty). A convenience: storage failures just mean repeats. */
 export function recentCelebrationWords(): Set<string> {
-  try { return new Set(JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]") as string[]); } catch { return new Set(); }
+  try {
+    return new Set(JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
 }
 export function rememberCelebrationWords(used: string[]) {
   try {
     const previous = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]") as string[];
-    window.localStorage.setItem(RECENT_KEY, JSON.stringify([...used, ...previous.filter((item) => !used.includes(item))].slice(0, 60)));
-  } catch { /* Repeats are fine. */ }
+    window.localStorage.setItem(
+      RECENT_KEY,
+      JSON.stringify([...used, ...previous.filter((item) => !used.includes(item))].slice(0, 60)),
+    );
+  } catch {
+    /* Repeats are fine. */
+  }
 }

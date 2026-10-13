@@ -4,7 +4,11 @@ const BASE = "http://next.invalid";
 /** The normalized same-site path for a value, or null when it resolves anywhere else. */
 function sameSitePath(value: string): string | null {
   let url: URL;
-  try { url = new URL(value, BASE); } catch { return null; }
+  try {
+    url = new URL(value, BASE);
+  } catch {
+    return null;
+  }
   if (url.origin !== BASE) return null;
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -21,7 +25,12 @@ export function safeNextPath(value: unknown): string {
   const path = sameSitePath(value);
   if (!path || !/^\/(?![/\\])/.test(path) || sameSitePath(path) !== path) return DEFAULT_NEXT;
   let decoded: string;
-  try { decoded = decodeURIComponent(path.split(/[?#]/, 1)[0]!); } catch { return DEFAULT_NEXT; }
-  if (/^(\/demo)?\/(sign-in|signup)(\/|$)/i.test(decoded) || /^\/(api|v1|socket\.io)(\/|$)/i.test(decoded)) return DEFAULT_NEXT;
+  try {
+    decoded = decodeURIComponent(path.split(/[?#]/, 1)[0]!);
+  } catch {
+    return DEFAULT_NEXT;
+  }
+  if (/^(\/demo)?\/(sign-in|signup)(\/|$)/i.test(decoded) || /^\/(api|v1|socket\.io)(\/|$)/i.test(decoded))
+    return DEFAULT_NEXT;
   return path;
 }

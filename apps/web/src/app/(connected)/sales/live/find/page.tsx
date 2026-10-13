@@ -5,4 +5,10 @@ import { FindScreen } from "@/screens/sales/find";
 
 export const metadata: Metadata = { title: "Find leads — Sales — Venture Studio OS" };
 
-export default function Page() { return <Suspense fallback={<SalesFallback />}><FindScreen /></Suspense>; }
+export default function Page() {
+  return (
+    <Suspense fallback={<SalesFallback />}>
+      <FindScreen />
+    </Suspense>
+  );
+}

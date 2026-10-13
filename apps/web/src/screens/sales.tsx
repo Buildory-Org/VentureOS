@@ -29,13 +29,7 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { Drawer, drawerForms } from "@/components/ui/drawer";
 import { ghostBtn, primaryBtn } from "@/components/ui/btn";
 import { inr } from "@/lib/format";
-import {
-  invoices,
-  customers,
-  salesOrders,
-  quotations,
-  followUps,
-} from "@/lib/mock-modules";
+import { invoices, customers, salesOrders, quotations, followUps } from "@/lib/mock-modules";
 import { SalesTrend } from "@/components/dashboard/sales-trend";
 
 const tabs = [
@@ -56,7 +50,6 @@ const invoiceMenu = [
   { label: "Cancel invoice", icon: Cancel01Icon, danger: true },
 ];
 
-
 function Inner() {
   const tab = useTab(tabs);
   const [form, setForm] = useState<string | null>(null);
@@ -64,11 +57,15 @@ function Inner() {
   const invoiceRows: Row[] = invoices.map((v) => ({
     id: v.id,
     cells: [
-      <span key="id" className="font-bold text-primary-600">{v.id}</span>,
+      <span key="id" className="font-bold text-primary-600">
+        {v.id}
+      </span>,
       v.date,
       v.customer,
       inr(v.amount),
-      <span key="d" className={v.due.startsWith("OVER") ? "font-bold text-danger" : ""}>{v.due}</span>,
+      <span key="d" className={v.due.startsWith("OVER") ? "font-bold text-danger" : ""}>
+        {v.due}
+      </span>,
       <StatusChip key="s" label={v.status} tone={v.tone as Tone} />,
     ],
     menu: invoiceMenu,
@@ -76,10 +73,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="Sales"
-        subtitle="Invoices, orders, customers and collections — Delhi HQ +2"
-      >
+      <PageHeader title="Sales" subtitle="Invoices, orders, customers and collections — Delhi HQ +2">
         <Dropdown
           align="right"
           items={[
@@ -148,11 +142,20 @@ function Inner() {
             rows={customers.map((c) => ({
               id: c.id,
               cells: [
-                <span key="n" className="font-bold text-neutral-900">{c.name}</span>,
-                <span key="g" className="rounded-md bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-primary-700">{c.grade}</span>,
+                <span key="n" className="font-bold text-neutral-900">
+                  {c.name}
+                </span>,
+                <span
+                  key="g"
+                  className="rounded-md bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-primary-700"
+                >
+                  {c.grade}
+                </span>,
                 c.city,
                 inr(c.lifetime),
-                <span key="o" className={c.outstanding > 0 ? "font-bold text-danger" : ""}>{inr(c.outstanding)}</span>,
+                <span key="o" className={c.outstanding > 0 ? "font-bold text-danger" : ""}>
+                  {inr(c.outstanding)}
+                </span>,
                 <StatusChip key="s" label={c.status} tone={c.tone as Tone} />,
               ],
               menu: [
@@ -183,8 +186,13 @@ function Inner() {
             rows={salesOrders.map((o) => ({
               id: o.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{o.id}</span>,
-                o.date, o.customer, o.items, inr(o.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {o.id}
+                </span>,
+                o.date,
+                o.customer,
+                o.items,
+                inr(o.amount),
                 <StatusChip key="s" label={o.status} tone={o.tone as Tone} />,
               ],
               menu: [
@@ -213,8 +221,12 @@ function Inner() {
             rows={quotations.map((qt) => ({
               id: qt.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{qt.id}</span>,
-                qt.date, qt.customer, inr(qt.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {qt.id}
+                </span>,
+                qt.date,
+                qt.customer,
+                inr(qt.amount),
                 <StatusChip key="s" label={qt.status} tone={qt.tone as Tone} />,
               ],
               menu: [
@@ -248,11 +260,18 @@ function Inner() {
             rows={followUps.map((f) => ({
               id: f.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{f.id}</span>,
-                f.customer, inr(f.amount),
-                <span key="d" className="font-bold text-danger">{f.days}d</span>,
+                <span key="i" className="font-bold text-primary-600">
+                  {f.id}
+                </span>,
+                f.customer,
+                inr(f.amount),
+                <span key="d" className="font-bold text-danger">
+                  {f.days}d
+                </span>,
                 f.last,
-                <span key="n" className="font-semibold text-primary-700">{f.next}</span>,
+                <span key="n" className="font-semibold text-primary-700">
+                  {f.next}
+                </span>,
               ],
               menu: [
                 { label: "Send WhatsApp reminder ✦", icon: SentIcon },

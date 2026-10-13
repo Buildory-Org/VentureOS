@@ -16,20 +16,44 @@ export const WORK_END_HOUR = 19;
 export type WorkCalendar = { workingDays: ReadonlySet<number>; blackout: ReadonlySet<string>; timeZone: string };
 
 /** ISO weekdays (1 = Monday ... 7 = Sunday). */
-export function workCalendar(settings: { workingDays: readonly number[]; blackoutDates: readonly string[]; timezone: string }): WorkCalendar {
-  return { workingDays: new Set(settings.workingDays), blackout: new Set(settings.blackoutDates), timeZone: settings.timezone };
+export function workCalendar(settings: {
+  workingDays: readonly number[];
+  blackoutDates: readonly string[];
+  timezone: string;
+}): WorkCalendar {
+  return {
+    workingDays: new Set(settings.workingDays),
+    blackout: new Set(settings.blackoutDates),
+    timeZone: settings.timezone,
+  };
 }
 
 /** Festival blackout (calendar days): 2026-10-20 and 2026-11-06 to 2026-11-11 (the default for ventures without their own list). */
 export const BLACKOUT_DAYS: ReadonlySet<string> = new Set(DEFAULT_BLACKOUT_DATES);
 
-export const DEFAULT_CALENDAR: WorkCalendar = { workingDays: new Set([1, 2, 3, 4, 5, 6]), blackout: BLACKOUT_DAYS, timeZone: SALES_TZ };
+export const DEFAULT_CALENDAR: WorkCalendar = {
+  workingDays: new Set([1, 2, 3, 4, 5, 6]),
+  blackout: BLACKOUT_DAYS,
+  timeZone: SALES_TZ,
+};
 
 function offsetMs(instant: Date, timeZone: string): number {
   if (timeZone === SALES_TZ) return IST_OFFSET_MS;
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(instant);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant);
   const value = (type: string) => Number(parts.find((part) => part.type === type)?.value);
-  return Date.UTC(value("year"), value("month") - 1, value("day"), value("hour"), value("minute"), value("second")) - Math.floor(instant.getTime() / 1000) * 1000;
+  return (
+    Date.UTC(value("year"), value("month") - 1, value("day"), value("hour"), value("minute"), value("second")) -
+    Math.floor(instant.getTime() / 1000) * 1000
+  );
 }
 
 /** The calendar day ("YYYY-MM-DD") of an instant in the calendar's time zone. */
@@ -59,7 +83,12 @@ export function isWorkingDay(day: string, cal: WorkCalendar = DEFAULT_CALENDAR):
 }
 
 /** The instant `hour:minute` starts on a calendar day in the calendar's time zone. */
-export function localMoment(day: string, hour = FOLLOW_UP_HOUR, minute = 0, cal: WorkCalendar = DEFAULT_CALENDAR): Date {
+export function localMoment(
+  day: string,
+  hour = FOLLOW_UP_HOUR,
+  minute = 0,
+  cal: WorkCalendar = DEFAULT_CALENDAR,
+): Date {
   const [year, month, date] = day.split("-").map(Number) as [number, number, number];
   const wall = Date.UTC(year, month - 1, date, hour, minute);
   const first = wall - offsetMs(new Date(wall), cal.timeZone);
@@ -83,7 +112,12 @@ export function workingDateOnOrAfter(day: string, cal: WorkCalendar = DEFAULT_CA
 }
 
 /** The moment `days` working days after the day of `from`, at `hour` local. */
-export function addWorkingDays(from: Date, days: number, hour = FOLLOW_UP_HOUR, cal: WorkCalendar = DEFAULT_CALENDAR): Date {
+export function addWorkingDays(
+  from: Date,
+  days: number,
+  hour = FOLLOW_UP_HOUR,
+  cal: WorkCalendar = DEFAULT_CALENDAR,
+): Date {
   let day = localDay(from, cal);
   for (let step = 0; step < days; step++) day = nextWorkingDate(day, cal);
   return localMoment(day, hour, 0, cal);
@@ -95,7 +129,12 @@ export function nextWorkingDay(from: Date, hour = FOLLOW_UP_HOUR, cal: WorkCalen
 }
 
 /** `from` plus calendar days, moved forward to a working day, at `hour` local. */
-export function workingMomentAfterDays(from: Date, days: number, hour = FOLLOW_UP_HOUR, cal: WorkCalendar = DEFAULT_CALENDAR): Date {
+export function workingMomentAfterDays(
+  from: Date,
+  days: number,
+  hour = FOLLOW_UP_HOUR,
+  cal: WorkCalendar = DEFAULT_CALENDAR,
+): Date {
   return localMoment(workingDateOnOrAfter(localDay(new Date(from.getTime() + days * DAY_MS), cal), cal), hour, 0, cal);
 }
 
@@ -117,11 +156,17 @@ export function addWorkingHours(from: Date, hours: number, cal: WorkCalendar = D
   let cursor = from;
   for (let guard = 0; guard < 400; guard++) {
     const day = localDay(cursor, cal);
-    if (!isWorkingDay(day, cal)) { cursor = localMoment(nextWorkingDate(day, cal), WORK_START_HOUR, 0, cal); continue; }
+    if (!isWorkingDay(day, cal)) {
+      cursor = localMoment(nextWorkingDate(day, cal), WORK_START_HOUR, 0, cal);
+      continue;
+    }
     const start = localMoment(day, WORK_START_HOUR, 0, cal);
     const end = localMoment(day, WORK_END_HOUR, 0, cal);
     if (cursor < start) cursor = start;
-    if (cursor >= end) { cursor = localMoment(nextWorkingDate(day, cal), WORK_START_HOUR, 0, cal); continue; }
+    if (cursor >= end) {
+      cursor = localMoment(nextWorkingDate(day, cal), WORK_START_HOUR, 0, cal);
+      continue;
+    }
     const available = (end.getTime() - cursor.getTime()) / 60_000;
     if (remaining <= available) return new Date(cursor.getTime() + remaining * 60_000);
     remaining -= available;
@@ -141,5 +186,9 @@ export function endOfLocalDay(instant: Date, timeZone: string): Date {
 /** The instant the local calendar day containing `instant` began. */
 export function startOfLocalDay(instant: Date, timeZone: string): Date {
   const day = new Date(instant.getTime() + offsetMs(instant, timeZone)).toISOString().slice(0, 10);
-  return localMoment(day, 0, 0, { workingDays: DEFAULT_CALENDAR.workingDays, blackout: DEFAULT_CALENDAR.blackout, timeZone });
+  return localMoment(day, 0, 0, {
+    workingDays: DEFAULT_CALENDAR.workingDays,
+    blackout: DEFAULT_CALENDAR.blackout,
+    timeZone,
+  });
 }

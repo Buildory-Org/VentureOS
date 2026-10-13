@@ -11,7 +11,12 @@ export const count = (value: number) => nf.format(value);
 /** "1 call", "3 calls". */
 export const plural = (value: number, one: string, many: string) => `${nf.format(value)} ${value === 1 ? one : many}`;
 /** "38%", or null when the sample is too small to show a share (fewer than 5). */
-export const percent = (rate: ReportRate | null | undefined) => (rate && rate.value !== null ? (rate.value > 0 && rate.value < 0.005 ? "<1%" : `${Math.round(rate.value * 100)}%`) : null);
+export const percent = (rate: ReportRate | null | undefined) =>
+  rate && rate.value !== null
+    ? rate.value > 0 && rate.value < 0.005
+      ? "<1%"
+      : `${Math.round(rate.value * 100)}%`
+    : null;
 /** "38% (n 45)", "too few (n 3)" or "no cases yet": for plain text and labels. */
 export function rateWords(rate: ReportRate | null | undefined) {
   if (!rate || rate.n === 0) return "no cases yet";
@@ -25,56 +30,134 @@ export function hours(value: number) {
   if (value < 48) return `${value < 10 ? value.toFixed(1).replace(/\.0$/, "") : Math.round(value)} h`;
   return `${(value / 24).toFixed(1).replace(/\.0$/, "")} days`;
 }
-export const days = (value: number) => (value < 1 ? "under a day" : `${value < 10 ? value.toFixed(1).replace(/\.0$/, "") : Math.round(value)} ${value === 1 ? "day" : "days"}`);
+export const days = (value: number) =>
+  value < 1
+    ? "under a day"
+    : `${value < 10 ? value.toFixed(1).replace(/\.0$/, "") : Math.round(value)} ${value === 1 ? "day" : "days"}`;
 /** Minor units (paise, cents) as money: "₹50,000". */
 export function money(minor: number, currency: string) {
-  try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(minor / 100); }
-  catch { return `${currency} ${nf.format(Math.round(minor / 100))}`; }
+  try {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(
+      minor / 100,
+    );
+  } catch {
+    return `${currency} ${nf.format(Math.round(minor / 100))}`;
+  }
 }
 
 /** A share with its sample, never a percentage below 5 cases: "38%" over "n 45", or "too few" over "n 3". */
-export function RateValue({ rate, className, size = "md" }: { rate: ReportRate | null | undefined; className?: string; size?: "md" | "lg" }) {
+export function RateValue({
+  rate,
+  className,
+  size = "md",
+}: {
+  rate: ReportRate | null | undefined;
+  className?: string;
+  size?: "md" | "lg";
+}) {
   const shown = percent(rate);
-  return <span className={clsx("inline-flex flex-col leading-tight", className)}>
-    <span className={clsx("font-bold", size === "lg" ? "text-[22px] tracking-tight text-neutral-900" : "text-sm", shown ? "text-neutral-900" : "text-neutral-400")}>{shown ?? (rate && rate.n > 0 ? "too few" : "—")}</span>
-    <span className="tnum text-[11px] font-medium text-neutral-500">{rate ? `n ${count(rate.n)}${shown && rate.small ? " · small sample" : ""}` : ""}</span>
-  </span>;
+  return (
+    <span className={clsx("inline-flex flex-col leading-tight", className)}>
+      <span
+        className={clsx(
+          "font-bold",
+          size === "lg" ? "text-[22px] tracking-tight text-neutral-900" : "text-sm",
+          shown ? "text-neutral-900" : "text-neutral-400",
+        )}
+      >
+        {shown ?? (rate && rate.n > 0 ? "too few" : "—")}
+      </span>
+      <span className="tnum text-[11px] font-medium text-neutral-500">
+        {rate ? `n ${count(rate.n)}${shown && rate.small ? " · small sample" : ""}` : ""}
+      </span>
+    </span>
+  );
 }
 
 /** A median or average with its sample. */
-export function StatValue({ stat, format, size = "md" }: { stat: ReportStat; format: (value: number) => string; size?: "md" | "lg" }) {
-  return <span className="inline-flex flex-col leading-tight">
-    <span className={clsx("font-bold", size === "lg" ? "text-[22px] tracking-tight" : "text-sm", stat.value !== null ? "text-neutral-900" : "text-neutral-400")}>{stat.value !== null ? format(stat.value) : stat.n > 0 ? "too few" : "—"}</span>
-    <span className="tnum text-[11px] font-medium text-neutral-500">n {count(stat.n)}{stat.value !== null && stat.small ? " · small sample" : ""}</span>
-  </span>;
+export function StatValue({
+  stat,
+  format,
+  size = "md",
+}: {
+  stat: ReportStat;
+  format: (value: number) => string;
+  size?: "md" | "lg";
+}) {
+  return (
+    <span className="inline-flex flex-col leading-tight">
+      <span
+        className={clsx(
+          "font-bold",
+          size === "lg" ? "text-[22px] tracking-tight" : "text-sm",
+          stat.value !== null ? "text-neutral-900" : "text-neutral-400",
+        )}
+      >
+        {stat.value !== null ? format(stat.value) : stat.n > 0 ? "too few" : "—"}
+      </span>
+      <span className="tnum text-[11px] font-medium text-neutral-500">
+        n {count(stat.n)}
+        {stat.value !== null && stat.small ? " · small sample" : ""}
+      </span>
+    </span>
+  );
 }
 
 /** One report section: a card with a title, a line on what it measures, and an optional control. */
-export function ReportSection({ id, title, subtitle, aside, children, className }: { id: string; title: string; subtitle: string; aside?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return <Panel className={clsx("min-w-0", className)}>
-    <section aria-labelledby={`${id}-title`}>
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4">
-        <div className="min-w-0 flex-1 basis-64"><h2 id={`${id}-title`} className="text-sm font-bold text-neutral-900">{title}</h2><p className="mt-0.5 text-xs leading-5 text-neutral-500">{subtitle}</p></div>
-        {aside}
-      </header>
-      <div className="p-5">{children}</div>
-    </section>
-  </Panel>;
+export function ReportSection({
+  id,
+  title,
+  subtitle,
+  aside,
+  children,
+  className,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Panel className={clsx("min-w-0", className)}>
+      <section aria-labelledby={`${id}-title`}>
+        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+          <div className="min-w-0 flex-1 basis-64">
+            <h2 id={`${id}-title`} className="text-sm font-bold text-neutral-900">
+              {title}
+            </h2>
+            <p className="mt-0.5 text-xs leading-5 text-neutral-500">{subtitle}</p>
+          </div>
+          {aside}
+        </header>
+        <div className="p-5">{children}</div>
+      </section>
+    </Panel>
+  );
 }
 
 /** A quiet note that says what will appear here once there is data (an empty section is a promise, not a failure). */
 export function WillAppear({ title, body, className }: { title: string; body: string; className?: string }) {
-  return <div className={clsx("rounded-xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3", className)}>
-    <p className="text-xs font-bold text-neutral-700">{title}</p>
-    <p className="mt-0.5 text-xs leading-5 text-neutral-500">{body}</p>
-  </div>;
+  return (
+    <div className={clsx("rounded-xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3", className)}>
+      <p className="text-xs font-bold text-neutral-700">{title}</p>
+      <p className="mt-0.5 text-xs leading-5 text-neutral-500">{body}</p>
+    </div>
+  );
 }
 
 /** The "small sample" marker: shown wherever fewer than 30 cases stand behind a number. */
 export function SmallSample({ n }: { n: number }) {
-  return <span title="Fewer than 30 cases: read this as a hint, not proof. Below 5 cases no percentage is shown." className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-warning-surface px-2.5 py-0.5 text-[11px] font-semibold text-warning-text">
-    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />Small sample · n {count(n)}
-  </span>;
+  return (
+    <span
+      title="Fewer than 30 cases: read this as a hint, not proof. Below 5 cases no percentage is shown."
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-warning-surface px-2.5 py-0.5 text-[11px] font-semibold text-warning-text"
+    >
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      Small sample · n {count(n)}
+    </span>
+  );
 }
 
 /** The width of an element, kept up to date (charts draw in real pixels so nothing stretches). */

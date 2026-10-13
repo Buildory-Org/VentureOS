@@ -8,13 +8,7 @@ import { Widget } from "./widget";
 import { aiSuggestions } from "@/lib/mock-data";
 
 /** Widget ⑪ — AI suggestions feed with accept/dismiss loop. */
-export function AiSuggestions({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function AiSuggestions({ delay = 0, className }: { delay?: number; className?: string }) {
   const [items, setItems] = useState(aiSuggestions);
 
   return (
@@ -34,12 +28,7 @@ export function AiSuggestions({
         {items.map((s, i) => (
           <li key={i} className="rounded-xl bg-white/90 p-3">
             <p className="flex items-start gap-2 text-[12px] font-medium leading-4.5 text-neutral-700">
-              <HugeiconsIcon
-                icon={AiMagicIcon}
-                size={13}
-                strokeWidth={1.75}
-                className="mt-0.5 shrink-0 text-ai"
-              />
+              <HugeiconsIcon icon={AiMagicIcon} size={13} strokeWidth={1.75} className="mt-0.5 shrink-0 text-ai" />
               {s.text}
             </p>
             <div className="mt-2.5 flex items-center gap-1.5 pl-5">

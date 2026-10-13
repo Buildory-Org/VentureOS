@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Area,
-  AreaChart,
-  ReferenceDot,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts";
+import { Area, AreaChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AiMagicIcon } from "@hugeicons/core-free-icons";
 import { Widget } from "./widget";
@@ -16,13 +9,7 @@ import { salesTrend } from "@/lib/mock-data";
 const HOT = 5; // Sep — highlighted point
 
 /** Widget ③ — Sales trend: gradient line + highlighted month. */
-export function SalesTrend({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function SalesTrend({ delay = 0, className }: { delay?: number; className?: string }) {
   const hot = salesTrend[HOT];
   return (
     <Widget
@@ -67,14 +54,7 @@ export function SalesTrend({
               dot={false}
               activeDot={{ r: 4.5, strokeWidth: 2.5, stroke: "#fff" }}
             />
-            <ReferenceDot
-              x={hot.d}
-              y={hot.v}
-              r={5}
-              fill="var(--color-primary-700)"
-              stroke="#fff"
-              strokeWidth={3}
-            />
+            <ReferenceDot x={hot.d} y={hot.v} r={5} fill="var(--color-primary-700)" stroke="#fff" strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

@@ -26,16 +26,65 @@ const server = createServer(app);
 server.keepAliveTimeout = 65_000;
 server.headersTimeout = 66_000;
 attachRealtime(server, database, resolveActor, config.APP_ORIGIN, config.APP_MODE === "local" && config.ALLOW_DEV_AUTH);
-server.listen(config.PORT, () => console.info(JSON.stringify({ level: "info", event: "api.started", port: config.PORT, mode: config.APP_MODE, transactions: database.transactions, storage: store.kind })));
+server.listen(config.PORT, () =>
+  console.info(
+    JSON.stringify({
+      level: "info",
+      event: "api.started",
+      port: config.PORT,
+      mode: config.APP_MODE,
+      transactions: database.transactions,
+      storage: store.kind,
+    }),
+  ),
+);
 // Files uploaded before their text was read (or while reading was busy) are read once in the background after startup.
-setTimeout(() => void backfillFileTexts(database.db, (file) => fileStoreFor(file, store, localStore)).then((read) => { if (read) console.info(JSON.stringify({ level: "info", event: "file_text.backfill", read })); }, (error: unknown) => console.warn(JSON.stringify({ level: "warn", event: "file_text.backfill_failed", message: error instanceof Error ? error.message : String(error) }))), 5_000).unref();
+setTimeout(
+  () =>
+    void backfillFileTexts(database.db, (file) => fileStoreFor(file, store, localStore)).then(
+      (read) => {
+        if (read) console.info(JSON.stringify({ level: "info", event: "file_text.backfill", read }));
+      },
+      (error: unknown) =>
+        console.warn(
+          JSON.stringify({
+            level: "warn",
+            event: "file_text.backfill_failed",
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        ),
+    ),
+  5_000,
+).unref();
 // Older deal records (from before Sales) get the Sales names and do-not-contact match keys once, in the background: a deploy runs no
 // migration step, and the run is safe to repeat (it changes nothing the second time). npm run migrate does the same by hand.
-setTimeout(() => void migrateSalesLeads(database.db, { whenChanged: true }).then((result) => { if (Object.values(result).some(Boolean)) console.info(JSON.stringify({ level: "info", event: "sales.migration", ...result })); }, (error: unknown) => console.warn(JSON.stringify({ level: "warn", event: "sales.migration_failed", message: error instanceof Error ? error.message : String(error) }))), 3_000).unref();
+setTimeout(
+  () =>
+    void migrateSalesLeads(database.db, { whenChanged: true }).then(
+      (result) => {
+        if (Object.values(result).some(Boolean))
+          console.info(JSON.stringify({ level: "info", event: "sales.migration", ...result }));
+      },
+      (error: unknown) =>
+        console.warn(
+          JSON.stringify({
+            level: "warn",
+            event: "sales.migration_failed",
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        ),
+    ),
+  3_000,
+).unref();
 // The built-in lead finder works queued find-leads and enrich runs in the background (SALES_FINDER=on, never under tests); a workspace
 // without a company-search key keeps its runs queued. On shutdown a run in progress goes back to the queue.
 const finder = finderEnabled(config) ? createFinder({ database, env: config }) : undefined;
 if (finder) setTimeout(() => finder.start(), 5_000).unref();
-async function shutdown() { await finder?.stop(); stopRealtime(database); server.close(); await database.client.close(); }
+async function shutdown() {
+  await finder?.stop();
+  stopRealtime(database);
+  server.close();
+  await database.client.close();
+}
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

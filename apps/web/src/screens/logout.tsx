@@ -10,9 +10,7 @@ export function LogoutScreen() {
           <span className="mx-auto grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700">
             <HugeiconsIcon icon={FlashIcon} size={20} strokeWidth={2.25} className="text-white" />
           </span>
-          <h1 className="mt-4 text-[18px] font-bold tracking-tight text-neutral-900">
-            Signed out
-          </h1>
+          <h1 className="mt-4 text-[18px] font-bold tracking-tight text-neutral-900">Signed out</h1>
           <p className="mt-1.5 text-[12.5px] font-medium text-neutral-500">
             You&apos;ve been securely signed out of AIBOS. Data synced at 10:42 am.
           </p>

@@ -9,5 +9,9 @@ export function localDevUserId(): string | null {
   if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return null;
   const host = window.location.hostname;
   if (host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".localhost")) return null;
-  try { return window.localStorage.getItem("vso-dev-user-id")?.trim() || fallbackDevUserId; } catch { return fallbackDevUserId; }
+  try {
+    return window.localStorage.getItem("vso-dev-user-id")?.trim() || fallbackDevUserId;
+  } catch {
+    return fallbackDevUserId;
+  }
 }

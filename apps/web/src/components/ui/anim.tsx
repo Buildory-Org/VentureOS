@@ -11,10 +11,7 @@ export function Anim({
   className?: string;
 }) {
   return (
-    <div
-      className={clsx("animate-page-in", className)}
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <div className={clsx("animate-page-in", className)} style={{ animationDelay: `${delay}ms` }}>
       {children}
     </div>
   );

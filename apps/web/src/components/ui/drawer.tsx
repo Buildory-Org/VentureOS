@@ -15,7 +15,7 @@ function useDrawerHost() {
   return useSyncExternalStore(
     subscribe,
     () => document.getElementById("drawer-root"),
-    () => null
+    () => null,
   );
 }
 
@@ -46,7 +46,7 @@ export function Drawer({
         onClick={onClose}
         className={clsx(
           "absolute inset-0 z-40 bg-neutral-900/20 transition-opacity duration-200",
-          open ? "opacity-100" : "pointer-events-none opacity-0"
+          open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
       <aside
@@ -54,13 +54,11 @@ export function Drawer({
         className={clsx(
           "absolute bottom-0 right-0 top-0 z-50 flex w-[440px] max-w-[92%] flex-col bg-white",
           "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          open ? "translate-x-0" : "translate-x-full"
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex items-center justify-between px-5 py-4">
-          <h2 className="text-[15px] font-bold tracking-tight text-neutral-900">
-            {title}
-          </h2>
+          <h2 className="text-[15px] font-bold tracking-tight text-neutral-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -74,9 +72,7 @@ export function Drawer({
         <div className="thin-scroll flex-1 space-y-4 overflow-y-auto px-5 pb-4">
           {fields.map((f) => (
             <label key={f.label} className="block">
-              <span className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
-                {f.label}
-              </span>
+              <span className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">{f.label}</span>
               <input
                 type="text"
                 placeholder={f.placeholder}

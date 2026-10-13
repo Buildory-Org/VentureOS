@@ -39,10 +39,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="Finance"
-        subtitle="Books, expenses, cash flow and tax — FY Apr 2026–Mar 2027"
-      >
+      <PageHeader title="Finance" subtitle="Books, expenses, cash flow and tax — FY Apr 2026–Mar 2027">
         <Dropdown
           align="right"
           items={[
@@ -97,8 +94,8 @@ function Inner() {
               </div>
               <div className="mt-5 rounded-xl bg-ai-surface p-3">
                 <p className="flex items-start gap-2 text-[11.5px] font-semibold leading-snug text-ai-text">
-                  <HugeiconsIcon icon={ReceiptIcon} size={14} strokeWidth={1.5} className="mt-0.5 shrink-0" />
-                  ✦ Expense anomalies: 2 entries look unusual vs history — EXP-0908 is 4× the category median.
+                  <HugeiconsIcon icon={ReceiptIcon} size={14} strokeWidth={1.5} className="mt-0.5 shrink-0" />✦ Expense
+                  anomalies: 2 entries look unusual vs history — EXP-0908 is 4× the category median.
                 </p>
               </div>
             </div>
@@ -120,8 +117,13 @@ function Inner() {
             rows={income.map((i) => ({
               id: i.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{i.id}</span>,
-                i.date, i.from, i.method, inr(i.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {i.id}
+                </span>,
+                i.date,
+                i.from,
+                i.method,
+                inr(i.amount),
                 <StatusChip key="s" label={i.status} tone={i.tone as Tone} />,
               ],
               menu: [
@@ -154,8 +156,13 @@ function Inner() {
             rows={expenses.map((e) => ({
               id: e.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{e.id}</span>,
-                e.date, e.category, e.vendor, inr(e.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {e.id}
+                </span>,
+                e.date,
+                e.category,
+                e.vendor,
+                inr(e.amount),
                 <StatusChip key="s" label={e.status} tone={e.tone as Tone} />,
               ],
               menu: [
@@ -192,7 +199,9 @@ function Inner() {
               <div key={b.name} className="rounded-2xl bg-white p-5">
                 <div className="flex items-center justify-between">
                   <p className="text-[13.5px] font-bold text-neutral-900">{b.name}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${b.used > 85 ? "bg-warning-surface text-warning-text" : "bg-neutral-100 text-neutral-500"}`}>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${b.used > 85 ? "bg-warning-surface text-warning-text" : "bg-neutral-100 text-neutral-500"}`}
+                  >
                     {b.used}% used
                   </span>
                 </div>

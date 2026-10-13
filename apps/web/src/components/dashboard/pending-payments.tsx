@@ -5,13 +5,7 @@ import { pendingPayments } from "@/lib/mock-data";
 import { inrCompact } from "@/lib/format";
 
 /** Widget ⑦ — Pending payments / overdue receivables. */
-export function PendingPayments({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function PendingPayments({ delay = 0, className }: { delay?: number; className?: string }) {
   return (
     <Widget
       title="Pending Payments"
@@ -25,21 +19,12 @@ export function PendingPayments({
       </p>
       <ul className="space-y-2.5">
         {pendingPayments.map((p) => (
-          <li
-            key={p.name}
-            className="flex items-center justify-between gap-2"
-          >
+          <li key={p.name} className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-[12.5px] font-semibold text-neutral-800">
-                {p.name}
-              </p>
-              <p className="text-[11px] font-medium text-danger-text tnum">
-                {p.days}d late
-              </p>
+              <p className="truncate text-[12.5px] font-semibold text-neutral-800">{p.name}</p>
+              <p className="text-[11px] font-medium text-danger-text tnum">{p.days}d late</p>
             </div>
-            <span className="text-[13px] font-semibold text-neutral-900 tnum">
-              {inrCompact(p.amount)}
-            </span>
+            <span className="text-[13px] font-semibold text-neutral-900 tnum">{inrCompact(p.amount)}</span>
           </li>
         ))}
       </ul>

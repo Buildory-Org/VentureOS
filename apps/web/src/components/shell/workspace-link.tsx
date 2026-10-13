@@ -5,12 +5,26 @@ import type { ComponentProps } from "react";
 import { useStudio } from "@/lib/studio-store";
 
 const connectedRoutes: Record<string, string> = {
-  dashboard: "/dashboard/live", today: "/today/live", calendar: "/calendar/live", ventures: "/ventures/live",
-  tasks: "/tasks/live", board: "/board/live", channels: "/channels/live",
-  messages: "/messages/live", notifications: "/notifications/live",
-  knowledge: "/knowledge/live", decisions: "/decisions/live", classes: "/classes/live",
-  timeline: "/timeline/live", requests: "/requests/live", sales: "/sales/live",
-  admin: "/admin/live", settings: "/notifications/live", focus: "/focus/live", connect: "/connect/live", leaderboard: "/leaderboard/live",
+  dashboard: "/dashboard/live",
+  today: "/today/live",
+  calendar: "/calendar/live",
+  ventures: "/ventures/live",
+  tasks: "/tasks/live",
+  board: "/board/live",
+  channels: "/channels/live",
+  messages: "/messages/live",
+  notifications: "/notifications/live",
+  knowledge: "/knowledge/live",
+  decisions: "/decisions/live",
+  classes: "/classes/live",
+  timeline: "/timeline/live",
+  requests: "/requests/live",
+  sales: "/sales/live",
+  admin: "/admin/live",
+  settings: "/notifications/live",
+  focus: "/focus/live",
+  connect: "/connect/live",
+  leaderboard: "/leaderboard/live",
 };
 
 export function workspaceHref(href: string, mode: "demo" | "connected") {

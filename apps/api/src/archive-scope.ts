@@ -2,11 +2,20 @@ import type { Membership } from "@venture-studio/contracts";
 import type { AppDb } from "./db.js";
 
 /** The archived ventures of a workspace and the groups inside them. */
-export async function archivedScope(db: AppDb, workspaceId: string): Promise<{ ventureIds: string[]; groupIds: string[] }> {
-  const ventures = await db.collection("ventures").find({ workspaceId, status: "archived" }, { projection: { _id: 1 } }).toArray();
+export async function archivedScope(
+  db: AppDb,
+  workspaceId: string,
+): Promise<{ ventureIds: string[]; groupIds: string[] }> {
+  const ventures = await db
+    .collection("ventures")
+    .find({ workspaceId, status: "archived" }, { projection: { _id: 1 } })
+    .toArray();
   if (!ventures.length) return { ventureIds: [], groupIds: [] };
   const ventureIds = ventures.map((venture) => String(venture._id));
-  const groups = await db.collection("groups").find({ workspaceId, ventureId: { $in: ventureIds } }, { projection: { _id: 1 } }).toArray();
+  const groups = await db
+    .collection("groups")
+    .find({ workspaceId, ventureId: { $in: ventureIds } }, { projection: { _id: 1 } })
+    .toArray();
   return { ventureIds, groupIds: groups.map((group) => String(group._id)) };
 }
 
@@ -27,12 +36,18 @@ export async function withArchiveScope(db: AppDb, membership: Membership): Promi
 }
 
 /** Mongo filter that drops records of archived ventures; for admin queries that are otherwise workspace-wide. Records without a ventureId still match. */
-export function notArchived(membership: Pick<Membership, "archivedVentureIds">, field = "ventureId"): Record<string, unknown> {
+export function notArchived(
+  membership: Pick<Membership, "archivedVentureIds">,
+  field = "ventureId",
+): Record<string, unknown> {
   return membership.archivedVentureIds?.length ? { [field]: { $nin: membership.archivedVentureIds } } : {};
 }
 
 /** Same for records scoped by group (channels, messages). */
-export function notArchivedGroup(membership: Pick<Membership, "archivedGroupIds">, field = "groupId"): Record<string, unknown> {
+export function notArchivedGroup(
+  membership: Pick<Membership, "archivedGroupIds">,
+  field = "groupId",
+): Record<string, unknown> {
   return membership.archivedGroupIds?.length ? { [field]: { $nin: membership.archivedGroupIds } } : {};
 }
 

@@ -17,10 +17,13 @@ export function openLiveSocket() {
     transports: ["polling"],
     withCredentials: true,
     auth: async (done) => {
-      if (!devUserId) { done({}); return; }
+      if (!devUserId) {
+        done({});
+        return;
+      }
       try {
         const response = await fetch("/api/auth/get-session", { credentials: "same-origin" });
-        const session = await response.json() as { user?: { id?: string } } | null;
+        const session = (await response.json()) as { user?: { id?: string } } | null;
         done(session?.user?.id ? {} : { devUserId });
       } catch {
         done({ devUserId });
@@ -38,13 +41,20 @@ export const celebrationNudgeEvent = "venture:celebration";
  */
 export function useNotificationNudges(onNudge: () => void) {
   const callback = useRef(onNudge);
-  useEffect(() => { callback.current = onNudge; }, [onNudge]);
+  useEffect(() => {
+    callback.current = onNudge;
+  }, [onNudge]);
   useEffect(() => {
     const socket = openLiveSocket();
     socket.on("notification", () => callback.current());
     socket.on("celebration", () => window.dispatchEvent(new Event(celebrationNudgeEvent)));
-    socket.on("connect", () => { callback.current(); window.dispatchEvent(new Event(celebrationNudgeEvent)); });
-    return () => { socket.disconnect(); };
+    socket.on("connect", () => {
+      callback.current();
+      window.dispatchEvent(new Event(celebrationNudgeEvent));
+    });
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 }
 
@@ -52,7 +62,9 @@ export function useLiveRealtime(onEvent: () => void, channelId?: string) {
   const callback = useRef(onEvent);
   const [state, setState] = useState<RealtimeState>("connecting");
 
-  useEffect(() => { callback.current = onEvent; }, [onEvent]);
+  useEffect(() => {
+    callback.current = onEvent;
+  }, [onEvent]);
 
   useEffect(() => {
     const socket = openLiveSocket();
@@ -60,11 +72,16 @@ export function useLiveRealtime(onEvent: () => void, channelId?: string) {
     let lastEventId: string | undefined;
     let lastOrder = "";
     const seen = new Set<string>();
-    queueMicrotask(() => { if (active) setState("connecting"); });
+    queueMicrotask(() => {
+      if (active) setState("connecting");
+    });
 
     function remember(event: { eventId: string; occurredAt: string }) {
       const order = `${event.occurredAt}:${event.eventId}`;
-      if (order > lastOrder) { lastOrder = order; lastEventId = event.eventId; }
+      if (order > lastOrder) {
+        lastOrder = order;
+        lastEventId = event.eventId;
+      }
       if (seen.has(event.eventId)) return false;
       seen.add(event.eventId);
       return true;
@@ -79,7 +96,11 @@ export function useLiveRealtime(onEvent: () => void, channelId?: string) {
           if (!channelId || event.channelId === channelId) callback.current();
         }
       } catch {
-        if (active) { lastEventId = undefined; lastOrder = ""; callback.current(); }
+        if (active) {
+          lastEventId = undefined;
+          lastOrder = "";
+          callback.current();
+        }
       }
     }
 
@@ -88,10 +109,17 @@ export function useLiveRealtime(onEvent: () => void, channelId?: string) {
       if (channelId) {
         socket.timeout(5000).emit("channel:join", channelId, (error: Error | null, result: { ok?: boolean }) => {
           if (!active) return;
-          if (error || !result?.ok) { setState("unavailable"); return; }
-          setState("live"); void catchUp();
+          if (error || !result?.ok) {
+            setState("unavailable");
+            return;
+          }
+          setState("live");
+          void catchUp();
         });
-      } else { setState("live"); void catchUp(); }
+      } else {
+        setState("live");
+        void catchUp();
+      }
     });
     socket.on("event", (value: unknown) => {
       if (!active) return;
@@ -99,10 +127,17 @@ export function useLiveRealtime(onEvent: () => void, channelId?: string) {
       if (!parsed.success || !remember(parsed.data)) return;
       if (!channelId || parsed.data.channelId === channelId) callback.current();
     });
-    socket.on("disconnect", () => { if (active) setState("connecting"); });
-    socket.on("connect_error", () => { if (active) setState("unavailable"); });
+    socket.on("disconnect", () => {
+      if (active) setState("connecting");
+    });
+    socket.on("connect_error", () => {
+      if (active) setState("unavailable");
+    });
 
-    return () => { active = false; socket.disconnect(); };
+    return () => {
+      active = false;
+      socket.disconnect();
+    };
   }, [channelId]);
 
   return state;

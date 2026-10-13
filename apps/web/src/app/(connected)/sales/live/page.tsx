@@ -3,4 +3,6 @@ import { OverviewScreen } from "@/screens/sales/overview";
 
 export const metadata: Metadata = { title: "Sales — Venture Studio OS" };
 
-export default function Page() { return <OverviewScreen />; }
+export default function Page() {
+  return <OverviewScreen />;
+}

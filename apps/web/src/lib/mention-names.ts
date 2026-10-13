@@ -22,10 +22,14 @@ export function useMentionNames(): MentionNames {
           for (const item of page.items) if (item.handle) found.set(item.handle.toLowerCase(), item.name);
           cursor = page.nextCursor;
         } while (cursor && active);
-      } catch { /* Mentions stay as typed. */ }
+      } catch {
+        /* Mentions stay as typed. */
+      }
       if (active) setNames(found);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
   return names;
 }
@@ -62,6 +66,11 @@ export function mentionsIn(text: string, names: MentionNames): Array<[string, st
 export function withMentionHandles(text: string, chosen: ReadonlyMap<string, string>): string {
   if (!chosen.size) return text;
   // One pass, longest names first (so "@Ann Lee" wins over "@Ann"); an @ inside a word, like an email address, is left alone.
-  const names = [...chosen.keys()].sort((a, b) => b.length - a.length).map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return text.replace(new RegExp(`(^|[^\\w@])@(${names.join("|")})(?![\\w])`, "g"), (_all, before: string, name: string) => `${before}@${chosen.get(name)}`);
+  const names = [...chosen.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return text.replace(
+    new RegExp(`(^|[^\\w@])@(${names.join("|")})(?![\\w])`, "g"),
+    (_all, before: string, name: string) => `${before}@${chosen.get(name)}`,
+  );
 }

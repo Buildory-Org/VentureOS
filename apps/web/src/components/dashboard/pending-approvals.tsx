@@ -7,17 +7,10 @@ import { Widget } from "./widget";
 import { pendingApprovals } from "@/lib/mock-data";
 
 /** Widget ⑧ — Pending approvals with inline approve/reject. */
-export function PendingApprovals({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function PendingApprovals({ delay = 0, className }: { delay?: number; className?: string }) {
   const [items, setItems] = useState(pendingApprovals);
 
-  const act = (id: number) =>
-    setItems((list) => list.filter((i) => i.id !== id));
+  const act = (id: number) => setItems((list) => list.filter((i) => i.id !== id));
 
   return (
     <Widget
@@ -27,8 +20,7 @@ export function PendingApprovals({
       className={className}
     >
       <p className="mb-2.5 text-[11.5px] font-semibold text-neutral-500">
-        <span className="text-neutral-900 tnum">{items.length}</span> waiting on
-        you
+        <span className="text-neutral-900 tnum">{items.length}</span> waiting on you
       </p>
       <ul className="space-y-1">
         {items.length === 0 && (
@@ -42,12 +34,8 @@ export function PendingApprovals({
             className="flex items-center justify-between gap-2 rounded-xl px-1.5 py-1.5 transition-colors duration-150 hover:bg-neutral-50"
           >
             <div className="min-w-0">
-              <p className="truncate text-[12.5px] font-semibold text-neutral-800">
-                {a.title}
-              </p>
-              <p className="truncate text-[11px] font-medium text-neutral-400">
-                {a.sub}
-              </p>
+              <p className="truncate text-[12.5px] font-semibold text-neutral-800">{a.title}</p>
+              <p className="truncate text-[11px] font-medium text-neutral-400">{a.sub}</p>
             </div>
             <div className="flex shrink-0 gap-1.5">
               <button

@@ -27,8 +27,12 @@ export const plSummary = [
 ];
 
 export const salesTrend = [
-  { d: "Apr", v: 8.4 }, { d: "May", v: 9.1 }, { d: "Jun", v: 8.7 },
-  { d: "Jul", v: 10.2 }, { d: "Aug", v: 11.0 }, { d: "Sep", v: 12.4 },
+  { d: "Apr", v: 8.4 },
+  { d: "May", v: 9.1 },
+  { d: "Jun", v: 8.7 },
+  { d: "Jul", v: 10.2 },
+  { d: "Aug", v: 11.0 },
+  { d: "Sep", v: 12.4 },
 ];
 
 export const monthlyTargets = [

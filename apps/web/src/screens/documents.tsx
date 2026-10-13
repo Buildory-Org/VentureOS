@@ -36,10 +36,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="Documents"
-        subtitle="Library, OCR search and e-signatures"
-      >
+      <PageHeader title="Documents" subtitle="Library, OCR search and e-signatures">
         <button type="button" className={ghostBtn}>
           <HugeiconsIcon icon={Folder01Icon} size={15} strokeWidth={1.75} />
           New Folder
@@ -56,11 +53,7 @@ function Inner() {
 
       {tab === "library" && (
         <Anim delay={130} className="space-y-4">
-          <AlertStrip
-            tone="ai"
-            text="✦ OCR is on — search covers scanned text in Hindi + English"
-            cta="Try it"
-          />
+          <AlertStrip tone="ai" text="✦ OCR is on — search covers scanned text in Hindi + English" cta="Try it" />
           {/* 3-pane library — §6j */}
           <div className="grid gap-4 lg:grid-cols-12">
             {/* folders */}
@@ -73,15 +66,29 @@ function Inner() {
                   className={clsx(
                     "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12.5px] font-semibold",
                     "transition-[color,background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.98]",
-                    folder === f.name ? "bg-primary-700 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                    folder === f.name ? "bg-primary-700 text-white" : "text-neutral-600 hover:bg-neutral-100",
                   )}
                 >
-                  <HugeiconsIcon icon={Folder01Icon} size={16} strokeWidth={1.5} className={folder === f.name ? "text-white/70" : "text-neutral-300"} />
+                  <HugeiconsIcon
+                    icon={Folder01Icon}
+                    size={16}
+                    strokeWidth={1.5}
+                    className={folder === f.name ? "text-white/70" : "text-neutral-300"}
+                  />
                   <span className="flex-1 truncate text-left">{f.name}</span>
-                  <span className={clsx("text-[10px] font-semibold tnum", folder === f.name ? "text-white/60" : "text-neutral-300")}>{f.count}</span>
+                  <span
+                    className={clsx(
+                      "text-[10px] font-semibold tnum",
+                      folder === f.name ? "text-white/60" : "text-neutral-300",
+                    )}
+                  >
+                    {f.count}
+                  </span>
                 </button>
               ))}
-              <p className="px-3 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.09em] text-ai-text">✦ Smart folders</p>
+              <p className="px-3 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-[0.09em] text-ai-text">
+                ✦ Smart folders
+              </p>
               {smartFolders.map((f) => (
                 <button
                   key={f.name}
@@ -90,7 +97,7 @@ function Inner() {
                   className={clsx(
                     "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12.5px] font-semibold",
                     "transition-[color,background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.98]",
-                    folder === f.name ? "bg-ai-surface text-ai-text" : "text-ai-text/80 hover:bg-ai-surface"
+                    folder === f.name ? "bg-ai-surface text-ai-text" : "text-ai-text/80 hover:bg-ai-surface",
                   )}
                 >
                   <HugeiconsIcon icon={AiFolder01Icon} size={16} strokeWidth={1.5} />
@@ -114,24 +121,31 @@ function Inner() {
               {documents
                 .filter((d) => d.name.toLowerCase().includes(q.toLowerCase()))
                 .map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => setSel(d.id)}
-                  className={clsx(
-                    "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left",
-                    "transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.99]",
-                    sel === d.id ? "bg-primary-50" : "hover:bg-neutral-50"
-                  )}
-                >
-                  <HugeiconsIcon icon={File01Icon} size={18} strokeWidth={1.5} className="shrink-0 text-neutral-300" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-bold text-neutral-900">{d.name}</span>
-                    <span className="block truncate text-[11px] font-medium text-neutral-400">{d.meta} · {d.date}</span>
-                  </span>
-                  <StatusChip label={d.status} tone={d.tone as Tone} />
-                </button>
-              ))}
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setSel(d.id)}
+                    className={clsx(
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left",
+                      "transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.99]",
+                      sel === d.id ? "bg-primary-50" : "hover:bg-neutral-50",
+                    )}
+                  >
+                    <HugeiconsIcon
+                      icon={File01Icon}
+                      size={18}
+                      strokeWidth={1.5}
+                      className="shrink-0 text-neutral-300"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-bold text-neutral-900">{d.name}</span>
+                      <span className="block truncate text-[11px] font-medium text-neutral-400">
+                        {d.meta} · {d.date}
+                      </span>
+                    </span>
+                    <StatusChip label={d.status} tone={d.tone as Tone} />
+                  </button>
+                ))}
             </div>
 
             {/* preview */}
@@ -144,7 +158,10 @@ function Inner() {
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <StatusChip label={doc.status} tone={doc.tone as Tone} />
-                <button type="button" className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">
+                <button
+                  type="button"
+                  className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                >
                   <HugeiconsIcon icon={Download01Icon} size={15} strokeWidth={1.5} />
                 </button>
               </div>
@@ -156,16 +173,22 @@ function Inner() {
               </div>
               <div className="mt-3 rounded-xl bg-ai-surface p-3.5">
                 <p className="flex items-start gap-2 text-[12px] font-semibold leading-snug text-ai-text">
-                  <HugeiconsIcon icon={AiFolder01Icon} size={15} strokeWidth={1.5} className="mt-0.5 shrink-0" />
-                  ✦ Summary: 3-yr lease, 1-yr lock-in, deposit ₹2.7L. Renewal due 31 Mar 2027.
+                  <HugeiconsIcon icon={AiFolder01Icon} size={15} strokeWidth={1.5} className="mt-0.5 shrink-0" />✦
+                  Summary: 3-yr lease, 1-yr lock-in, deposit ₹2.7L. Renewal due 31 Mar 2027.
                 </p>
               </div>
               <div className="mt-3 flex gap-2">
-                <button type="button" className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-neutral-100 py-2 text-[11.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">
+                <button
+                  type="button"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-neutral-100 py-2 text-[11.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                >
                   <HugeiconsIcon icon={SignatureIcon} size={14} strokeWidth={1.5} />
                   Request signature
                 </button>
-                <button type="button" className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-neutral-100 py-2 text-[11.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">
+                <button
+                  type="button"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-neutral-100 py-2 text-[11.5px] font-bold text-neutral-600 transition-colors hover:bg-neutral-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                >
                   <HugeiconsIcon icon={FolderUploadIcon} size={14} strokeWidth={1.5} />
                   Share
                 </button>
@@ -177,21 +200,33 @@ function Inner() {
 
       {tab === "signatures" && (
         <Anim delay={130} className="space-y-4">
-          <AlertStrip tone="warning" text="5 documents awaiting signature — oldest: vendor-kyc-xyz.pdf (4d)" cta="Send reminders" />
+          <AlertStrip
+            tone="warning"
+            text="5 documents awaiting signature — oldest: vendor-kyc-xyz.pdf (4d)"
+            cta="Send reminders"
+          />
           <div className="rounded-2xl bg-white p-3">
-            {documents.filter((d) => d.status !== "Verified").map((d) => (
-              <div key={d.id} className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-neutral-50">
-                <HugeiconsIcon icon={SignatureIcon} size={18} strokeWidth={1.5} className="text-neutral-300" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] font-bold text-neutral-900">{d.name}</p>
-                  <p className="text-[11px] font-medium text-neutral-400">{d.date}</p>
+            {documents
+              .filter((d) => d.status !== "Verified")
+              .map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-neutral-50"
+                >
+                  <HugeiconsIcon icon={SignatureIcon} size={18} strokeWidth={1.5} className="text-neutral-300" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-bold text-neutral-900">{d.name}</p>
+                    <p className="text-[11px] font-medium text-neutral-400">{d.date}</p>
+                  </div>
+                  <StatusChip label={d.status} tone={d.tone as Tone} />
+                  <button
+                    type="button"
+                    className="rounded-full bg-primary-700 px-3 py-1.5 text-[11px] font-semibold text-white transition-transform duration-150 hover:bg-primary-800 active:scale-[0.96]"
+                  >
+                    Remind
+                  </button>
                 </div>
-                <StatusChip label={d.status} tone={d.tone as Tone} />
-                <button type="button" className="rounded-full bg-primary-700 px-3 py-1.5 text-[11px] font-semibold text-white transition-transform duration-150 hover:bg-primary-800 active:scale-[0.96]">
-                  Remind
-                </button>
-              </div>
-            ))}
+              ))}
           </div>
         </Anim>
       )}
@@ -200,7 +235,10 @@ function Inner() {
         <Anim delay={130}>
           <div className="rounded-2xl bg-white p-3">
             {documents.slice(0, 3).map((d) => (
-              <div key={d.id} className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-neutral-50">
+              <div
+                key={d.id}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-neutral-50"
+              >
                 <HugeiconsIcon icon={File01Icon} size={18} strokeWidth={1.5} className="text-neutral-300" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12.5px] font-bold text-neutral-900">{d.name}</p>

@@ -4,13 +4,7 @@ import clsx from "clsx";
 import { Widget } from "./widget";
 
 /** Widget ① — AI Daily Business Summary (XL). */
-export function AiSummary({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function AiSummary({ delay = 0, className }: { delay?: number; className?: string }) {
   return (
     <Widget
       title="AI Daily Summary"
@@ -25,16 +19,14 @@ export function AiSummary({
         </span>
         <div className="space-y-2.5">
           <p className="text-[15.5px] font-medium leading-6.5 text-neutral-800">
-            Sales up{" "}
-            <span className="font-bold text-success-text">8%</span> vs last month.
-            Watch <span className="font-bold">Sharma Traders</span> — 45 days
-            late, <span className="font-bold tnum">₹1.2L</span> pending. Payroll
-            run due in <span className="font-bold">2 days</span>. Cash OK for ~6
-            weeks.
+            Sales up <span className="font-bold text-success-text">8%</span> vs last month. Watch{" "}
+            <span className="font-bold">Sharma Traders</span> — 45 days late,{" "}
+            <span className="font-bold tnum">₹1.2L</span> pending. Payroll run due in{" "}
+            <span className="font-bold">2 days</span>. Cash OK for ~6 weeks.
           </p>
           <p className="text-[12.5px] leading-5 text-neutral-500">
-            Biggest driver: collections from Gupta &amp; Sons (+₹3.4L). One risk
-            to watch — cash gap projected in week 3 of October.
+            Biggest driver: collections from Gupta &amp; Sons (+₹3.4L). One risk to watch — cash gap projected in week 3
+            of October.
           </p>
         </div>
       </div>

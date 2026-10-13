@@ -16,7 +16,12 @@ export const OFFER_VERSION_STATUSES = ["draft", "approved", "archived"] as const
 
 /** One gate: what must be true, and what happens when it isn't (reject the lead, or hold it with a question for a person). */
 export const offerGateSchema = z.object({
-  code: z.string().trim().min(1).max(12).regex(/^[A-Za-z0-9-]+$/, "a short code such as G1"),
+  code: z
+    .string()
+    .trim()
+    .min(1)
+    .max(12)
+    .regex(/^[A-Za-z0-9-]+$/, "a short code such as G1"),
   rule: line(500),
   ifFails: z.enum(["reject", "hold"]),
   note: text(500),
@@ -31,7 +36,11 @@ export const offerPacketSchema = z.object({
   summary: line(300),
   whoFor: z.object({
     description: text(3_000),
-    industries: list(120, 40), customerTypes: list(120, 20), places: list(120, 60), companySizes: list(300, 20), buyerRoles: list(300, 20),
+    industries: list(120, 40),
+    customerTypes: list(120, 20),
+    places: list(120, 60),
+    companySizes: list(300, 20),
+    buyerRoles: list(300, 20),
   }),
   /** Every gate must pass; a failed "reject" gate rejects, a failed "hold" gate holds the lead with a question. */
   gates: z.array(offerGateSchema).max(20).default([]),
@@ -46,7 +55,11 @@ export const offerPacketSchema = z.object({
   /** Sentence exclusions Claude applies when judging (beyond the gates). */
   exclusions: list(500, 30),
   say: z.object({
-    valueProposition: text(3_000), pitchAngles: list(600, 20), proofWords: text(500), approvedClaims: list(500, 20), claimsToAvoid: list(500, 30),
+    valueProposition: text(3_000),
+    pitchAngles: list(600, 20),
+    proofWords: text(500),
+    approvedClaims: list(500, 20),
+    claimsToAvoid: list(500, 30),
   }),
   /** How first messages and follow-ups are written for this offer (structure, channels, length, follow-up, review checklist). */
   messages: text(12_000),
@@ -70,29 +83,56 @@ export const offerProposalInputSchema = z.object({
   change: text(1_000),
 });
 export type OfferProposalInput = z.infer<typeof offerProposalInputSchema>;
-export const offerProposalUpdateSchema = offerProposalInputSchema.pick({ name: true, packet: true, change: true }).partial().refine((value) => Object.keys(value).length > 0);
+export const offerProposalUpdateSchema = offerProposalInputSchema
+  .pick({ name: true, packet: true, change: true })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0);
 export const offerStateInputSchema = z.object({ state: offerStateSchema });
 
 export const offerVersionSchema = z.object({
-  id: idSchema, offerId: idSchema, workspaceId: idSchema, ventureId: idSchema, version: z.number().int().positive(),
-  status: z.enum(OFFER_VERSION_STATUSES), name: z.string(), packet: offerPacketSchema, change: z.string(),
-  proposedBy: idSchema, via: z.enum(["app", "claude", "import"]), approvedBy: idSchema.optional(), approvedAt: isoDateSchema.optional(),
+  id: idSchema,
+  offerId: idSchema,
+  workspaceId: idSchema,
+  ventureId: idSchema,
+  version: z.number().int().positive(),
+  status: z.enum(OFFER_VERSION_STATUSES),
+  name: z.string(),
+  packet: offerPacketSchema,
+  change: z.string(),
+  proposedBy: idSchema,
+  via: z.enum(["app", "claude", "import"]),
+  approvedBy: idSchema.optional(),
+  approvedAt: isoDateSchema.optional(),
   /** On an archived version: when and by whom (replaced by a later approval, or a draft discarded). */
-  archivedAt: isoDateSchema.optional(), archivedBy: idSchema.optional(),
-  createdAt: isoDateSchema, updatedAt: isoDateSchema,
+  archivedAt: isoDateSchema.optional(),
+  archivedBy: idSchema.optional(),
+  createdAt: isoDateSchema,
+  updatedAt: isoDateSchema,
 });
 export type OfferVersion = z.infer<typeof offerVersionSchema>;
 
 /** An offer: its name and state, the approved packet Claude uses (none until a first version is approved) and the proposals waiting. */
 export const offerSchema = z.object({
-  id: idSchema, workspaceId: idSchema, ventureId: idSchema, name: z.string(), state: offerStateSchema,
-  approved: offerVersionSchema.nullable(), proposals: z.array(offerVersionSchema),
-  counts: z.object({ leads: z.number().int().nonnegative(), open: z.number().int().nonnegative(), plays: z.number().int().nonnegative() }),
-  createdBy: idSchema, createdAt: isoDateSchema, updatedAt: isoDateSchema,
+  id: idSchema,
+  workspaceId: idSchema,
+  ventureId: idSchema,
+  name: z.string(),
+  state: offerStateSchema,
+  approved: offerVersionSchema.nullable(),
+  proposals: z.array(offerVersionSchema),
+  counts: z.object({
+    leads: z.number().int().nonnegative(),
+    open: z.number().int().nonnegative(),
+    plays: z.number().int().nonnegative(),
+  }),
+  createdBy: idSchema,
+  createdAt: isoDateSchema,
+  updatedAt: isoDateSchema,
 });
 export type Offer = z.infer<typeof offerSchema>;
 /** GET /sales/offers/:id: the offer, plus its archived versions (newest first, up to 20). */
 export const offerDetailSchema = offerSchema.extend({ history: z.array(offerVersionSchema) });
 export type OfferDetail = z.infer<typeof offerDetailSchema>;
 /** Usable for new leads, verdicts and find runs: active, with an approved version. */
-export const offerIsUsable = (offer: Pick<Offer, "state" | "approved">) => offer.state === "active" && offer.approved !== null;
+export const offerIsUsable = (offer: Pick<Offer, "state" | "approved">) =>
+  offer.state === "active" && offer.approved !== null;

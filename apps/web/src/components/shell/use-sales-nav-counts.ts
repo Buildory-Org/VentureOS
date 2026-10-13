@@ -31,20 +31,48 @@ export function useSalesNavCounts(enabled: boolean, ventureId: string): SalesNav
       const now = Date.now();
       // A new venture scope always loads at once; the gap only spaces out refreshes of the same scope.
       if (!force && lastKey.current === key && now - lastLoad.current < MIN_GAP_MS) return;
-      lastLoad.current = now; lastKey.current = key;
-      getSalesOverview({ ...(ventureId ? { ventureId } : {}), owner: "me" }).then(({ counts }) => {
-        if (active) setState({ key, counts: { needsYou: counts.replies + counts.callsDue + counts.readyToSend + counts.toReview + counts.needsYou + counts.wonToHandOver + counts.followUpsDue, toReview: counts.toReview + counts.readyToSend, replies: counts.replies, callsDue: counts.callsDue } });
-      }).catch(() => { /* No counts is fine; the sidebar still works. */ });
+      lastLoad.current = now;
+      lastKey.current = key;
+      getSalesOverview({ ...(ventureId ? { ventureId } : {}), owner: "me" })
+        .then(({ counts }) => {
+          if (active)
+            setState({
+              key,
+              counts: {
+                needsYou:
+                  counts.replies +
+                  counts.callsDue +
+                  counts.readyToSend +
+                  counts.toReview +
+                  counts.needsYou +
+                  counts.wonToHandOver +
+                  counts.followUpsDue,
+                toReview: counts.toReview + counts.readyToSend,
+                replies: counts.replies,
+                callsDue: counts.callsDue,
+              },
+            });
+        })
+        .catch(() => {
+          /* No counts is fine; the sidebar still works. */
+        });
     };
     load(false, true);
     const onChange = () => load(true);
     const timer = window.setInterval(() => load(true), EVERY_MS);
     // A tab that was hidden when the numbers were due catches up as soon as it is shown again.
-    const onVisible = () => { if (document.visibilityState === "visible") load(false); };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load(false);
+    };
     window.addEventListener(SALES_CHANGED_EVENT, onChange);
     document.addEventListener("visibilitychange", onVisible);
-    return () => { active = false; window.clearInterval(timer); window.removeEventListener(SALES_CHANGED_EVENT, onChange); document.removeEventListener("visibilitychange", onVisible); };
-  // pathname: refresh on navigation.
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener(SALES_CHANGED_EVENT, onChange);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    // pathname: refresh on navigation.
   }, [enabled, ventureId, key, pathname]);
 
   return enabled && state?.key === key ? state.counts : null;

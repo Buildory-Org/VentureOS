@@ -9,24 +9,37 @@ function salesUrl(value) {
   try {
     const url = new URL(value, self.location.origin);
     return url.origin === self.location.origin && isSalesPath(url.pathname) ? url.pathname + url.search : "";
-  } catch { return ""; }
+  } catch {
+    return "";
+  }
 }
 
 // This worker only shows notifications, so a new version can take over at once.
-self.addEventListener("install", () => { self.skipWaiting(); });
-self.addEventListener("activate", (event) => { event.waitUntil(self.clients.claim()); });
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
 /** Where a notice opens: its conversation, task, event, or Sales screen (lead, draft, reply); otherwise the inbox. */
 function noticeUrl(notice) {
   const sales = salesUrl(notice?.url);
   if (sales) return sales;
-  if (notice?.chatKind === "channel" && opaqueId(notice.chatId)) return `/channels/live?channel=${encodeURIComponent(notice.chatId)}`;
-  if (notice?.chatKind === "direct" && opaqueId(notice.chatId)) return `/messages/live?with=${encodeURIComponent(notice.chatId)}`;
-  if (notice?.resourceType === "task" && opaqueId(notice.resourceId)) return `/tasks/live?task=${encodeURIComponent(notice.resourceId)}`;
-  if (notice?.resourceType === "event" && opaqueId(notice.resourceId)) return `/calendar/live?event=${encodeURIComponent(notice.resourceId)}`;
-  if (notice?.resourceType === "opportunity" && opaqueId(notice.resourceId)) return `/sales/live/leads?lead=${encodeURIComponent(notice.resourceId)}`;
-  if ((notice?.resourceType === "draft" || notice?.resourceType === "sales_draft") && opaqueId(notice.resourceId)) return `/sales/live/review?draft=${encodeURIComponent(notice.resourceId)}`;
-  if (notice?.resourceType === "activity" && opaqueId(notice.resourceId)) return `/sales/live/inbox?reply=${encodeURIComponent(notice.resourceId)}`;
+  if (notice?.chatKind === "channel" && opaqueId(notice.chatId))
+    return `/channels/live?channel=${encodeURIComponent(notice.chatId)}`;
+  if (notice?.chatKind === "direct" && opaqueId(notice.chatId))
+    return `/messages/live?with=${encodeURIComponent(notice.chatId)}`;
+  if (notice?.resourceType === "task" && opaqueId(notice.resourceId))
+    return `/tasks/live?task=${encodeURIComponent(notice.resourceId)}`;
+  if (notice?.resourceType === "event" && opaqueId(notice.resourceId))
+    return `/calendar/live?event=${encodeURIComponent(notice.resourceId)}`;
+  if (notice?.resourceType === "opportunity" && opaqueId(notice.resourceId))
+    return `/sales/live/leads?lead=${encodeURIComponent(notice.resourceId)}`;
+  if ((notice?.resourceType === "draft" || notice?.resourceType === "sales_draft") && opaqueId(notice.resourceId))
+    return `/sales/live/review?draft=${encodeURIComponent(notice.resourceId)}`;
+  if (notice?.resourceType === "activity" && opaqueId(notice.resourceId))
+    return `/sales/live/inbox?reply=${encodeURIComponent(notice.resourceId)}`;
   return "/notifications/live";
 }
 
@@ -38,61 +51,97 @@ async function readNotice(id) {
   if (!opaqueId(id)) return null;
   try {
     // A slow or unreachable server falls back to the generic notice rather than delaying it.
-    const response = await fetch(`/v1/notifications/${encodeURIComponent(id)}`, { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(4000) });
+    const response = await fetch(`/v1/notifications/${encodeURIComponent(id)}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
     if (!response.ok) return null;
     const body = await response.json();
     return body?.ok && body.data ? body.data : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 self.addEventListener("push", (event) => {
   let payload = {};
-  try { payload = event.data?.json() ?? {}; } catch { /* A malformed payload still gets a visible notice. */ }
+  try {
+    payload = event.data?.json() ?? {};
+  } catch {
+    /* A malformed payload still gets a visible notice. */
+  }
   if (!payload || typeof payload !== "object") payload = {};
-  event.waitUntil((async () => {
-    const windows = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter((client) => new URL(client.url).origin === self.location.origin);
-    // With the site in front, the page itself shows a pop-up and plays its sound.
-    if (windows.some((client) => client.focused)) return;
-    const notice = await readNotice(payload.notificationId);
-    const tag = opaqueId(payload.notificationId) ? payload.notificationId : undefined;
-    await self.registration.showNotification(notice?.title || "Venture Studio update", {
-      body: notice ? String(notice.body || "").slice(0, 300) : "Open your inbox to view the latest update.",
-      tag,
-      icon: "/brand/icon-192.png",
-      badge: "/brand/badge-96.png",
-      // A tab someone is looking at plays the app's own sound; otherwise (behind, frozen, or closed) the system sound plays.
-      silent: windows.some((client) => client.visibilityState === "visible"),
-      // A push may name its Sales screen itself (url: "/sales/live/..."); otherwise the notice decides.
-      data: { url: salesUrl(payload.url) || (notice ? noticeUrl(notice) : "/notifications/live") },
-    });
-  })());
+  event.waitUntil(
+    (async () => {
+      const windows = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter(
+        (client) => new URL(client.url).origin === self.location.origin,
+      );
+      // With the site in front, the page itself shows a pop-up and plays its sound.
+      if (windows.some((client) => client.focused)) return;
+      const notice = await readNotice(payload.notificationId);
+      const tag = opaqueId(payload.notificationId) ? payload.notificationId : undefined;
+      await self.registration.showNotification(notice?.title || "Venture Studio update", {
+        body: notice ? String(notice.body || "").slice(0, 300) : "Open your inbox to view the latest update.",
+        tag,
+        icon: "/brand/icon-192.png",
+        badge: "/brand/badge-96.png",
+        // A tab someone is looking at plays the app's own sound; otherwise (behind, frozen, or closed) the system sound plays.
+        silent: windows.some((client) => client.visibilityState === "visible"),
+        // A push may name its Sales screen itself (url: "/sales/live/..."); otherwise the notice decides.
+        data: { url: salesUrl(payload.url) || (notice ? noticeUrl(notice) : "/notifications/live") },
+      });
+    })(),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const path = event.notification.data?.url;
   let target = new URL(typeof path === "string" ? path : "/notifications/live", self.location.origin);
-  if (target.origin !== self.location.origin || !allowedPath(target.pathname)) target = new URL("/notifications/live", self.location.origin);
-  event.waitUntil((async () => {
-    const windows = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter((client) => new URL(client.url).origin === target.origin);
-    const existing = windows.find((client) => client.focused) ?? windows.find((client) => client.visibilityState === "visible") ?? windows[0];
-    if (existing) {
-      await existing.focus().catch(() => undefined);
-      // Opening it inside the app keeps an unsent draft; a tab from before this version is navigated instead.
-      const opened = await new Promise((resolve) => {
-        const channel = new MessageChannel();
-        const timer = setTimeout(() => { channel.port1.close(); resolve(false); }, 600);
-        channel.port1.onmessage = () => { clearTimeout(timer); channel.port1.close(); resolve(true); };
-        try { existing.postMessage({ type: "venture:open", url: target.pathname + target.search }, [channel.port2]); }
-        catch { clearTimeout(timer); channel.port1.close(); resolve(false); }
-      });
-      if (opened) return;
-      try {
-        const navigated = await existing.navigate(target.href);
-        await (navigated ?? existing).focus();
-        return;
-      } catch { /* A closed tab can fail navigation; open a fresh one below. */ }
-    }
-    await self.clients.openWindow(target.href);
-  })());
+  if (target.origin !== self.location.origin || !allowedPath(target.pathname))
+    target = new URL("/notifications/live", self.location.origin);
+  event.waitUntil(
+    (async () => {
+      const windows = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter(
+        (client) => new URL(client.url).origin === target.origin,
+      );
+      const existing =
+        windows.find((client) => client.focused) ??
+        windows.find((client) => client.visibilityState === "visible") ??
+        windows[0];
+      if (existing) {
+        await existing.focus().catch(() => undefined);
+        // Opening it inside the app keeps an unsent draft; a tab from before this version is navigated instead.
+        const opened = await new Promise((resolve) => {
+          const channel = new MessageChannel();
+          const timer = setTimeout(() => {
+            channel.port1.close();
+            resolve(false);
+          }, 600);
+          channel.port1.onmessage = () => {
+            clearTimeout(timer);
+            channel.port1.close();
+            resolve(true);
+          };
+          try {
+            existing.postMessage({ type: "venture:open", url: target.pathname + target.search }, [channel.port2]);
+          } catch {
+            clearTimeout(timer);
+            channel.port1.close();
+            resolve(false);
+          }
+        });
+        if (opened) return;
+        try {
+          const navigated = await existing.navigate(target.href);
+          await (navigated ?? existing).focus();
+          return;
+        } catch {
+          /* A closed tab can fail navigation; open a fresh one below. */
+        }
+      }
+      await self.clients.openWindow(target.href);
+    })(),
+  );
 });

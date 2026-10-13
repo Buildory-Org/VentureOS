@@ -16,7 +16,8 @@ const MAX_UNPACKED_BYTES = 80 * 1024 * 1024;
 // Control characters other than tab and newline (PDFs often carry form feeds and NULs).
 const NOISE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 
-export const canExtractText = (contentType: unknown) => typeof contentType === "string" && (PARSED.has(contentType) || PLAIN.has(contentType));
+export const canExtractText = (contentType: unknown) =>
+  typeof contentType === "string" && (PARSED.has(contentType) || PLAIN.has(contentType));
 
 type Extracted = { text: string; truncated: boolean; pages?: number };
 
@@ -28,8 +29,19 @@ const TOO_BIG = "The file is too large or complex to read";
 // Every step is linear (a regex like /[ \t]+\n/ is quadratic on long runs of spaces), and the text is cut to size first.
 function capped(raw: string, truncated: boolean, pages?: number): Extracted {
   const head = raw.length > MAX_TEXT_CHARS * 2 ? raw.slice(0, MAX_TEXT_CHARS * 2) : raw;
-  const clean = head.replace(NOISE, "").replace(/\r\n?/g, "\n").split("\n").map((line) => line.trimEnd()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
-  return { text: clean.slice(0, MAX_TEXT_CHARS), truncated: truncated || raw.length > head.length || clean.length > MAX_TEXT_CHARS, ...(pages ? { pages } : {}) };
+  const clean = head
+    .replace(NOISE, "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return {
+    text: clean.slice(0, MAX_TEXT_CHARS),
+    truncated: truncated || raw.length > head.length || clean.length > MAX_TEXT_CHARS,
+    ...(pages ? { pages } : {}),
+  };
 }
 
 /** The total size a zip says its entries unpack to, from its central directory; undefined when it is not a readable zip. */
@@ -39,14 +51,17 @@ export function zipUnpackedSize(bytes: Buffer): { entries: number; total: number
     if (bytes.readUInt32LE(at) !== 0x06054b50) continue;
     const entries = bytes.readUInt16LE(at + 10);
     let cursor = bytes.readUInt32LE(at + 16);
-    let total = 0; let largest = 0;
+    let total = 0;
+    let largest = 0;
     for (let index = 0; index < entries; index++) {
       if (cursor + 46 > bytes.length || bytes.readUInt32LE(cursor) !== 0x02014b50) return undefined;
       const size = bytes.readUInt32LE(cursor + 24);
       // 0xFFFFFFFF means a ZIP64 size: far beyond anything a document needs.
       if (size === 0xffffffff) return { entries, total: Number.POSITIVE_INFINITY, largest: Number.POSITIVE_INFINITY };
-      total += size; largest = Math.max(largest, size);
-      cursor += 46 + bytes.readUInt16LE(cursor + 28) + bytes.readUInt16LE(cursor + 30) + bytes.readUInt16LE(cursor + 32);
+      total += size;
+      largest = Math.max(largest, size);
+      cursor +=
+        46 + bytes.readUInt16LE(cursor + 28) + bytes.readUInt16LE(cursor + 30) + bytes.readUInt16LE(cursor + 32);
     }
     return { entries, total, largest };
   }
@@ -99,28 +114,66 @@ function parseInChild(bytes: Buffer, contentType: string, fileId: string): Promi
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ["--max-old-space-size=256", "-e", CHILD_SOURCE], {
       // Only what the parser needs; nothing from the API's environment (database or storage secrets).
-      env: { VSO_TEXT_JOB: JSON.stringify({ contentType, maxChars: MAX_TEXT_CHARS, maxPages: MAX_PAGES, ...LIBRARIES }), ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}) },
-      stdio: ["pipe", "pipe", "pipe"], windowsHide: true,
+      env: {
+        VSO_TEXT_JOB: JSON.stringify({ contentType, maxChars: MAX_TEXT_CHARS, maxPages: MAX_PAGES, ...LIBRARIES }),
+        ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+      },
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
     });
-    const out: Buffer[] = []; let outBytes = 0; let errText = ""; let timedOut = false; let settled = false;
+    const out: Buffer[] = [];
+    let outBytes = 0;
+    let errText = "";
+    let timedOut = false;
+    let settled = false;
     const fail = (message: string, detail: Record<string, unknown>) => {
-      if (settled) return; settled = true; clearTimeout(timer); child.kill("SIGKILL");
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.kill("SIGKILL");
       console.warn(JSON.stringify({ level: "warn", event: "file_text_parse_failed", fileId, contentType, ...detail }));
       reject(new ParseFailure(message));
     };
-    const timer = setTimeout(() => { timedOut = true; fail("Reading the file took too long", { reason: "timeout" }); }, TIMEOUT_MS);
-    child.stdout.on("data", (chunk: Buffer) => { outBytes += chunk.length; if (outBytes > MAX_ANSWER_BYTES) fail(TOO_BIG, { reason: "answer too large" }); else out.push(chunk); });
-    child.stderr.on("data", (chunk: Buffer) => { if (errText.length < 600) errText += chunk.toString("utf8").slice(0, 600 - errText.length); });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      fail("Reading the file took too long", { reason: "timeout" });
+    }, TIMEOUT_MS);
+    child.stdout.on("data", (chunk: Buffer) => {
+      outBytes += chunk.length;
+      if (outBytes > MAX_ANSWER_BYTES) fail(TOO_BIG, { reason: "answer too large" });
+      else out.push(chunk);
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      if (errText.length < 600) errText += chunk.toString("utf8").slice(0, 600 - errText.length);
+    });
     // The child may stop reading early (it crashed); that must not throw in the API.
     child.stdin.on("error", () => undefined);
     child.on("error", (error) => fail(DAMAGED, { reason: "spawn", message: error.message.slice(0, 200) }));
     child.on("close", (code, signal) => {
       if (settled) return;
-      let answer: { ok?: boolean; text?: string; truncated?: boolean; pages?: number; name?: string; message?: string } | undefined;
-      try { answer = JSON.parse(Buffer.concat(out).toString("utf8")); } catch { answer = undefined; }
-      if (!answer) return fail(timedOut ? "Reading the file took too long" : TOO_BIG, { reason: "no answer", code, signal, stderr: errText.slice(0, 300) });
-      if (!answer.ok) return fail(answer.name === "PasswordException" ? "The PDF is password-protected" : DAMAGED, { reason: "parser error", name: answer.name, message: answer.message });
-      settled = true; clearTimeout(timer);
+      let answer:
+        | { ok?: boolean; text?: string; truncated?: boolean; pages?: number; name?: string; message?: string }
+        | undefined;
+      try {
+        answer = JSON.parse(Buffer.concat(out).toString("utf8"));
+      } catch {
+        answer = undefined;
+      }
+      if (!answer)
+        return fail(timedOut ? "Reading the file took too long" : TOO_BIG, {
+          reason: "no answer",
+          code,
+          signal,
+          stderr: errText.slice(0, 300),
+        });
+      if (!answer.ok)
+        return fail(answer.name === "PasswordException" ? "The PDF is password-protected" : DAMAGED, {
+          reason: "parser error",
+          name: answer.name,
+          message: answer.message,
+        });
+      settled = true;
+      clearTimeout(timer);
       resolve(capped(answer.text ?? "", Boolean(answer.truncated), answer.pages));
     });
     child.stdin.end(bytes);
@@ -130,13 +183,27 @@ function parseInChild(bytes: Buffer, contentType: string, fileId: string): Promi
 /** The text inside a PDF, Word, Markdown, or plain-text file. Throws ParseFailure (safe message) when it has none. */
 export async function extractText(bytes: Buffer, contentType: string, fileId = "unknown"): Promise<Extracted> {
   // Plain text: decode only as much as can be kept (UTF-8 is at most 4 bytes a character).
-  if (PLAIN.has(contentType)) return capped(new TextDecoder("utf-8").decode(bytes.subarray(0, MAX_TEXT_CHARS * 4)).replace(/^﻿/, ""), bytes.length > MAX_TEXT_CHARS * 4);
+  if (PLAIN.has(contentType))
+    return capped(
+      new TextDecoder("utf-8").decode(bytes.subarray(0, MAX_TEXT_CHARS * 4)).replace(/^﻿/, ""),
+      bytes.length > MAX_TEXT_CHARS * 4,
+    );
   if (!PARSED.has(contentType)) throw new ParseFailure("This kind of file has no text to read");
   if (contentType === WORD_CONTENT_TYPE) {
     const unpacked = zipUnpackedSize(bytes);
     if (!unpacked) throw new ParseFailure(DAMAGED);
     if (unpacked.total > MAX_UNPACKED_BYTES || unpacked.entries > 5_000) {
-      console.warn(JSON.stringify({ level: "warn", event: "file_text_parse_failed", fileId, contentType, reason: "unpacks too large", entries: unpacked.entries, total: unpacked.total }));
+      console.warn(
+        JSON.stringify({
+          level: "warn",
+          event: "file_text_parse_failed",
+          fileId,
+          contentType,
+          reason: "unpacks too large",
+          entries: unpacked.entries,
+          total: unpacked.total,
+        }),
+      );
       throw new ParseFailure(TOO_BIG);
     }
   }
@@ -149,15 +216,34 @@ const waiting: Array<() => void> = [];
 async function withSlot<T>(work: () => Promise<T>): Promise<T> {
   if (running < 2) running++;
   else {
-    if (waiting.length >= 20) throw new AppError(503, "INTEGRATION_UNAVAILABLE", "File reading is busy; try again shortly");
+    if (waiting.length >= 20)
+      throw new AppError(503, "INTEGRATION_UNAVAILABLE", "File reading is busy; try again shortly");
     await new Promise<void>((resolve) => waiting.push(resolve));
   }
-  try { return await work(); }
-  finally { const next = waiting.shift(); if (next) next(); else running--; }
+  try {
+    return await work();
+  } finally {
+    const next = waiting.shift();
+    if (next) next();
+    else running--;
+  }
 }
 
-export type FileText = { status: "ready" | "empty" | "failed" | "unsupported"; text: string; truncated: boolean; pages?: number; chars: number; error?: string };
-const UNSUPPORTED: FileText = { status: "unsupported", text: "", truncated: false, chars: 0, error: "Only PDF, Word, Markdown, and plain-text files have readable text" };
+export type FileText = {
+  status: "ready" | "empty" | "failed" | "unsupported";
+  text: string;
+  truncated: boolean;
+  pages?: number;
+  chars: number;
+  error?: string;
+};
+const UNSUPPORTED: FileText = {
+  status: "unsupported",
+  text: "",
+  truncated: false,
+  chars: 0,
+  error: "Only PDF, Word, Markdown, and plain-text files have readable text",
+};
 // One read per file at a time: the background read after upload and a first request share it.
 const inFlight = new Map<string, Promise<FileText>>();
 
@@ -169,29 +255,62 @@ export async function storedFileText(db: AppDb, file: AppDocument, fileStore: Ob
   if (!canExtractText(file.contentType)) return UNSUPPORTED;
   const etag = String(file.etag ?? "");
   const cached = await db.collection("file_texts").findOne({ _id: file._id, etag });
-  if (cached) return { status: cached.status, text: String(cached.text ?? ""), truncated: Boolean(cached.truncated), ...(cached.pages ? { pages: Number(cached.pages) } : {}), chars: Number(cached.chars ?? 0), ...(cached.error ? { error: String(cached.error) } : {}) };
+  if (cached)
+    return {
+      status: cached.status,
+      text: String(cached.text ?? ""),
+      truncated: Boolean(cached.truncated),
+      ...(cached.pages ? { pages: Number(cached.pages) } : {}),
+      chars: Number(cached.chars ?? 0),
+      ...(cached.error ? { error: String(cached.error) } : {}),
+    };
   const key = `${String(file._id)}:${etag}`;
   const pending = inFlight.get(key);
   if (pending) return pending;
   const reading = withSlot(async () => {
     let bytes: Buffer;
-    try { bytes = await fileStore.read(String(file.objectKey), MAX_FILE_BYTES); }
-    catch (error) {
-      console.warn(JSON.stringify({ level: "warn", event: "file_text_storage_failed", fileId: String(file._id), message: error instanceof Error ? error.message.slice(0, 200) : String(error) }));
+    try {
+      bytes = await fileStore.read(String(file.objectKey), MAX_FILE_BYTES);
+    } catch (error) {
+      console.warn(
+        JSON.stringify({
+          level: "warn",
+          event: "file_text_storage_failed",
+          fileId: String(file._id),
+          message: error instanceof Error ? error.message.slice(0, 200) : String(error),
+        }),
+      );
       throw new AppError(503, "INTEGRATION_UNAVAILABLE", "The file's storage could not be reached; try again shortly");
     }
     let value: FileText;
     try {
       const extracted = await extractText(bytes, String(file.contentType), String(file._id));
-      value = { status: extracted.text ? "ready" : "empty", ...extracted, chars: extracted.text.length, ...(extracted.text ? {} : { error: "The file has no selectable text (a scanned PDF needs text recognition first)" }) };
+      value = {
+        status: extracted.text ? "ready" : "empty",
+        ...extracted,
+        chars: extracted.text.length,
+        ...(extracted.text
+          ? {}
+          : { error: "The file has no selectable text (a scanned PDF needs text recognition first)" }),
+      };
     } catch (error) {
       if (!(error instanceof ParseFailure)) throw error;
       value = { status: "failed", text: "", truncated: false, chars: 0, error: error.message };
     }
-    const scope = { workspaceId: file.workspaceId, ...(file.ventureId ? { ventureId: file.ventureId } : {}), ...(file.groupId ? { groupId: file.groupId } : {}), ...(file.recipientId ? { recipientId: file.recipientId } : {}) };
+    const scope = {
+      workspaceId: file.workspaceId,
+      ...(file.ventureId ? { ventureId: file.ventureId } : {}),
+      ...(file.groupId ? { groupId: file.groupId } : {}),
+      ...(file.recipientId ? { recipientId: file.recipientId } : {}),
+    };
     // Another API instance may store the same text at the same moment; whichever stores first wins.
-    try { await db.collection("file_texts").replaceOne({ _id: file._id }, { ...scope, etag, ...value, extractedAt: new Date() }, { upsert: true }); }
-    catch (error) { if ((error as { code?: number }).code !== 11000) throw error; }
+    try {
+      await db
+        .collection("file_texts")
+        .replaceOne({ _id: file._id }, { ...scope, etag, ...value, extractedAt: new Date() }, { upsert: true });
+    } catch (error) {
+      if ((error as { code?: number }).code !== 11000) throw error;
+    }
     return value;
   }).finally(() => inFlight.delete(key));
   inFlight.set(key, reading);
@@ -199,19 +318,40 @@ export async function storedFileText(db: AppDb, file: AppDocument, fileStore: Ob
 }
 
 /** Reads venture files whose text was never stored (uploaded before this existed, or while reading was busy), after startup. */
-export async function backfillFileTexts(db: AppDb, storeFor: (file: AppDocument) => ObjectStore | undefined, limit = 200): Promise<number> {
+export async function backfillFileTexts(
+  db: AppDb,
+  storeFor: (file: AppDocument) => ObjectStore | undefined,
+  limit = 200,
+): Promise<number> {
   let read = 0;
-  const cursor = db.collection("files").find({ status: "ready", recipientId: { $exists: false }, contentType: { $in: [...PARSED, ...PLAIN] } }).project({ _id: 1 }).sort({ _id: 1 });
+  const cursor = db
+    .collection("files")
+    .find({ status: "ready", recipientId: { $exists: false }, contentType: { $in: [...PARSED, ...PLAIN] } })
+    .project({ _id: 1 })
+    .sort({ _id: 1 });
   let batch: string[] = [];
   const run = async () => {
-    const done = new Set((await db.collection("file_texts").find({ _id: { $in: batch } }).project({ _id: 1 }).toArray()).map((row) => String(row._id)));
+    const done = new Set(
+      (
+        await db
+          .collection("file_texts")
+          .find({ _id: { $in: batch } })
+          .project({ _id: 1 })
+          .toArray()
+      ).map((row) => String(row._id)),
+    );
     for (const id of batch) {
       if (read >= limit || done.has(id)) continue;
       const file = await db.collection("files").findOne({ _id: id, status: "ready" });
       const store = file ? storeFor(file) : undefined;
       if (!file || !store) continue;
       // Busy or storage trouble: stop and leave the rest for the next start (or the first time someone opens them).
-      try { await storedFileText(db, file, store); read++; } catch { return false; }
+      try {
+        await storedFileText(db, file, store);
+        read++;
+      } catch {
+        return false;
+      }
     }
     batch = [];
     return read < limit;

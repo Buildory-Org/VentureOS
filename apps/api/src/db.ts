@@ -4,8 +4,12 @@ import type { AppConfig } from "./config.js";
 export type AppDocument = Document & { _id: string; [key: string]: any };
 export class AppDb {
   constructor(readonly native: Db) {}
-  collection(name: string): Collection<AppDocument> { return this.native.collection<AppDocument>(name); }
-  command(command: Document) { return this.native.command(command); }
+  collection(name: string): Collection<AppDocument> {
+    return this.native.collection<AppDocument>(name);
+  }
+  command(command: Document) {
+    return this.native.command(command);
+  }
 }
 export type Database = { client: MongoClient; db: AppDb; native: Db; transactions: boolean };
 

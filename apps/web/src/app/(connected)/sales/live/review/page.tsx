@@ -5,4 +5,10 @@ import { ReviewScreen } from "@/screens/sales/review";
 
 export const metadata: Metadata = { title: "Review — Sales — Venture Studio OS" };
 
-export default function Page() { return <Suspense fallback={<SalesFallback />}><ReviewScreen /></Suspense>; }
+export default function Page() {
+  return (
+    <Suspense fallback={<SalesFallback />}>
+      <ReviewScreen />
+    </Suspense>
+  );
+}

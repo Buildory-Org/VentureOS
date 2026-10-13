@@ -2,13 +2,7 @@ import { Widget } from "./widget";
 import { monthlyTargets } from "@/lib/mock-data";
 
 /** Widget ⑭ — Monthly targets progress. */
-export function MonthlyTargets({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function MonthlyTargets({ delay = 0, className }: { delay?: number; className?: string }) {
   return (
     <Widget
       title="Monthly Targets"
@@ -20,12 +14,8 @@ export function MonthlyTargets({
         {monthlyTargets.map((t) => (
           <li key={t.label}>
             <div className="mb-1.5 flex items-baseline justify-between">
-              <span className="text-[12.5px] font-semibold text-neutral-700">
-                {t.label}
-              </span>
-              <span className="text-[11px] font-medium text-neutral-400 tnum">
-                {t.of}
-              </span>
+              <span className="text-[12.5px] font-semibold text-neutral-700">{t.label}</span>
+              <span className="text-[11px] font-medium text-neutral-400 tnum">{t.of}</span>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
               <div
@@ -36,9 +26,7 @@ export function MonthlyTargets({
                 }}
               />
             </div>
-            <p className="mt-1 text-right text-[11px] font-semibold text-primary-700 tnum">
-              {t.pct}%
-            </p>
+            <p className="mt-1 text-right text-[11px] font-semibold text-primary-700 tnum">{t.pct}%</p>
           </li>
         ))}
       </ul>

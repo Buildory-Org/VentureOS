@@ -13,7 +13,10 @@ export type RobotsRules = { rules: Rule[]; crawlDelayMs?: number };
 type Group = { agents: string[]; rules: Rule[]; delay?: number };
 
 // Rules and paths are compared with the same percent-encoding: non-ASCII characters encoded as UTF-8, escapes in upper case.
-const encodePath = (value: string) => value.replace(/[^\x21-\x7e]/g, (char) => encodeURIComponent(char)).replace(/%[0-9a-f]{2}/gi, (escape) => escape.toUpperCase());
+const encodePath = (value: string) =>
+  value
+    .replace(/[^\x21-\x7e]/g, (char) => encodeURIComponent(char))
+    .replace(/%[0-9a-f]{2}/gi, (escape) => escape.toUpperCase());
 
 function ruleOf(allow: boolean, pattern: string): Rule {
   const value = encodePath(pattern);
@@ -25,12 +28,21 @@ function ruleOf(allow: boolean, pattern: string): Rule {
 
 /** Does `glob` ("*" is any run of characters, nothing else is special) match the whole of `text`? Greedy with one backtrack point: never exponential. */
 function globMatch(glob: string, text: string): boolean {
-  let g = 0, t = 0, star = -1, mark = 0;
+  let g = 0,
+    t = 0,
+    star = -1,
+    mark = 0;
   while (t < text.length) {
-    if (g < glob.length && glob[g] !== "*" && glob[g] === text[t]) { g++; t++; }
-    else if (g < glob.length && glob[g] === "*") { star = g++; mark = t; }
-    else if (star !== -1) { g = star + 1; t = ++mark; }
-    else return false;
+    if (g < glob.length && glob[g] !== "*" && glob[g] === text[t]) {
+      g++;
+      t++;
+    } else if (g < glob.length && glob[g] === "*") {
+      star = g++;
+      mark = t;
+    } else if (star !== -1) {
+      g = star + 1;
+      t = ++mark;
+    } else return false;
   }
   while (g < glob.length && glob[g] === "*") g++;
   return g === glob.length;
@@ -49,7 +61,10 @@ export function parseRobots(text: string, token = FINDER_TOKEN): RobotsRules {
     const value = match[2]!.trim();
     if (key === "user-agent") {
       // Consecutive user-agent lines share one group; a user-agent line after a rule starts a new group.
-      if (!current || !lastWasAgent) { current = { agents: [], rules: [] }; groups.push(current); }
+      if (!current || !lastWasAgent) {
+        current = { agents: [], rules: [] };
+        groups.push(current);
+      }
       current.agents.push(value.split("/")[0]!.trim().toLowerCase());
       lastWasAgent = true;
       continue;
@@ -57,13 +72,20 @@ export function parseRobots(text: string, token = FINDER_TOKEN): RobotsRules {
     lastWasAgent = false;
     if (!current) continue;
     // An empty Disallow allows everything, so it adds no rule.
-    if ((key === "allow" || key === "disallow") && value) current.rules.push(ruleOf(key === "allow", value.slice(0, 2_000)));
-    else if (key === "crawl-delay") { const seconds = Number(value); if (Number.isFinite(seconds) && seconds > 0) current.delay = Math.max(current.delay ?? 0, seconds); }
+    if ((key === "allow" || key === "disallow") && value)
+      current.rules.push(ruleOf(key === "allow", value.slice(0, 2_000)));
+    else if (key === "crawl-delay") {
+      const seconds = Number(value);
+      if (Number.isFinite(seconds) && seconds > 0) current.delay = Math.max(current.delay ?? 0, seconds);
+    }
   }
   const named = groups.filter((group) => group.agents.includes(token.toLowerCase()));
   const chosen = named.length ? named : groups.filter((group) => group.agents.includes("*"));
   const delay = Math.max(0, ...chosen.map((group) => group.delay ?? 0));
-  return { rules: chosen.flatMap((group) => group.rules), ...(delay ? { crawlDelayMs: Math.round(delay * 1000) } : {}) };
+  return {
+    rules: chosen.flatMap((group) => group.rules),
+    ...(delay ? { crawlDelayMs: Math.round(delay * 1000) } : {}),
+  };
 }
 
 /** May the finder fetch this path (with its query)? The longest matching rule decides; Allow wins a tie; no matching rule allows. */
@@ -87,29 +109,40 @@ type Entry = { at: number; rules?: RobotsRules; down?: string; pending?: Promise
 /** One robots.txt per site (scheme, host and port), fetched once and kept 24 hours; a site that did not answer stays closed until newRun(). */
 export class RobotsCache {
   private readonly entries = new Map<string, Entry>();
-  constructor(private readonly fetchRobots: RobotsFetch, private readonly now: () => number = Date.now, private readonly ttlMs = DAY_MS) {}
+  constructor(
+    private readonly fetchRobots: RobotsFetch,
+    private readonly now: () => number = Date.now,
+    private readonly ttlMs = DAY_MS,
+  ) {}
 
   async check(url: URL, signal: AbortSignal): Promise<RobotsVerdict> {
     const origin = url.origin;
     let entry = this.entries.get(origin);
-    if (entry && !entry.pending && !entry.down && this.now() - entry.at > this.ttlMs) { this.entries.delete(origin); entry = undefined; }
+    if (entry && !entry.pending && !entry.down && this.now() - entry.at > this.ttlMs) {
+      this.entries.delete(origin);
+      entry = undefined;
+    }
     if (!entry) {
       const fresh: Entry = { at: this.now() };
-      fresh.pending = this.load(origin, fresh, signal).finally(() => { delete fresh.pending; });
+      fresh.pending = this.load(origin, fresh, signal).finally(() => {
+        delete fresh.pending;
+      });
       this.entries.set(origin, fresh);
       entry = fresh;
     }
     if (entry.pending) await entry.pending;
     if (entry.down) return { allowed: false, reason: entry.down };
     if (!entry.rules) return { allowed: false, reason: "its robots.txt could not be read" };
-    if (!robotsAllows(entry.rules, `${url.pathname}${url.search}`)) return { allowed: false, reason: "robots.txt asks crawlers not to read this page" };
+    if (!robotsAllows(entry.rules, `${url.pathname}${url.search}`))
+      return { allowed: false, reason: "robots.txt asks crawlers not to read this page" };
     return { allowed: true, ...(entry.rules.crawlDelayMs ? { crawlDelayMs: entry.rules.crawlDelayMs } : {}) };
   }
 
   private async load(origin: string, entry: Entry, signal: AbortSignal): Promise<void> {
     let answer: RobotsAnswer;
-    try { answer = await this.fetchRobots(`${origin}/robots.txt`, signal); }
-    catch (error) {
+    try {
+      answer = await this.fetchRobots(`${origin}/robots.txt`, signal);
+    } catch (error) {
       // The run was stopped while robots.txt was loading: forget the entry so the next run asks again.
       this.entries.delete(origin);
       throw error;
@@ -124,6 +157,7 @@ export class RobotsCache {
 
   /** A new run: sites that did not answer robots.txt last time are asked again; rules that were read stay for their 24 hours. */
   newRun(): void {
-    for (const [origin, entry] of this.entries) if (entry.down || (!entry.pending && this.now() - entry.at > this.ttlMs)) this.entries.delete(origin);
+    for (const [origin, entry] of this.entries)
+      if (entry.down || (!entry.pending && this.now() - entry.at > this.ttlMs)) this.entries.delete(origin);
   }
 }

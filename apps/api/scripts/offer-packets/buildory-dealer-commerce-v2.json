@@ -5,22 +5,126 @@
     "summary": "A catalog-to-order system for owner-led suppliers that sell through dealers, in Chhattisgarh, Madhya Pradesh, Maharashtra and Odisha.",
     "whoFor": {
       "description": "Owner-led or mid-sized makers, distributors, wholesalers and stockists whose head office, or the office where the owner sits, is in Chhattisgarh, Madhya Pradesh, Maharashtra or Odisha (demos are in person). They sell physical goods through dealers, retailers or sub-dealers, and run catalog, rate-list, enquiry and order steps over calls, WhatsApp, PDFs or spreadsheets. Two tiers, both full targets: Tier A manufacturers (small fabricators with dealers included) and Tier B regional distributors, wholesalers and stockists that supply sub-dealers or retailers. Fit is workflow similarity (dealers, a real catalog, different prices for different buyers, staff handling enquiries and orders), not the industry name. Buckets: A agri equipment, pumps, irrigation, pipes and fittings; B solar, inverters, batteries, farm electrical; C hardware, electrical, plumbing, sanitaryware, building materials.",
-      "industries": ["agricultural equipment", "pumps", "irrigation products", "pipes and fittings", "solar pumps", "solar inverters and structures", "batteries", "farm electrical", "electrical goods", "hardware", "plumbing products", "sanitaryware", "building materials", "spare parts", "fasteners"],
-      "customerTypes": ["manufacturer", "distributor", "wholesaler", "stockist", "authorised distributor", "dealer network supplier"],
-      "places": ["Chhattisgarh", "Madhya Pradesh", "Maharashtra", "Odisha", "Raipur", "Indore", "Nagpur", "Bhopal", "Pune", "Nashik", "Kolhapur", "Bhubaneswar", "Bilaspur", "Jabalpur", "Aurangabad", "Jalgaon", "Bhilai", "Durg", "Pithampur", "Dewas", "Sangli", "Ahmednagar", "Cuttack", "Rourkela"],
-      "companySizes": ["Owner-led or mid-sized firm with its own website and a published enquiry route", "Signals of scale: branches, towns or states served, a stated dealer count, a large model or SKU catalog, a GST-registered company, years in business", "A very small single workshop is allowed but scores low on size and budget", "A large national brand is rejected under G3"],
-      "buyerRoles": ["Owner, proprietor or founder (decision and budget; in family firms elders or the munim may decide)", "Managing director, director or partner", "State head, sales head, distribution head or dealer-network manager", "General manager or operations head", "A role mailbox or enquiry WhatsApp is a channel, not a decision-maker: address the message to the owner"]
+      "industries": [
+        "agricultural equipment",
+        "pumps",
+        "irrigation products",
+        "pipes and fittings",
+        "solar pumps",
+        "solar inverters and structures",
+        "batteries",
+        "farm electrical",
+        "electrical goods",
+        "hardware",
+        "plumbing products",
+        "sanitaryware",
+        "building materials",
+        "spare parts",
+        "fasteners"
+      ],
+      "customerTypes": [
+        "manufacturer",
+        "distributor",
+        "wholesaler",
+        "stockist",
+        "authorised distributor",
+        "dealer network supplier"
+      ],
+      "places": [
+        "Chhattisgarh",
+        "Madhya Pradesh",
+        "Maharashtra",
+        "Odisha",
+        "Raipur",
+        "Indore",
+        "Nagpur",
+        "Bhopal",
+        "Pune",
+        "Nashik",
+        "Kolhapur",
+        "Bhubaneswar",
+        "Bilaspur",
+        "Jabalpur",
+        "Aurangabad",
+        "Jalgaon",
+        "Bhilai",
+        "Durg",
+        "Pithampur",
+        "Dewas",
+        "Sangli",
+        "Ahmednagar",
+        "Cuttack",
+        "Rourkela"
+      ],
+      "companySizes": [
+        "Owner-led or mid-sized firm with its own website and a published enquiry route",
+        "Signals of scale: branches, towns or states served, a stated dealer count, a large model or SKU catalog, a GST-registered company, years in business",
+        "A very small single workshop is allowed but scores low on size and budget",
+        "A large national brand is rejected under G3"
+      ],
+      "buyerRoles": [
+        "Owner, proprietor or founder (decision and budget; in family firms elders or the munim may decide)",
+        "Managing director, director or partner",
+        "State head, sales head, distribution head or dealer-network manager",
+        "General manager or operations head",
+        "A role mailbox or enquiry WhatsApp is a channel, not a decision-maker: address the message to the owner"
+      ]
     },
     "gates": [
-      { "code": "G1", "rule": "The head office, or the office where the owner sits, is in Chhattisgarh, Madhya Pradesh, Maharashtra or Odisha.", "ifFails": "reject", "note": "Only a branch in the four states: Hold, and ask who decides." },
-      { "code": "G2", "rule": "Sells through dealers, retailers, sub-dealers or wholesale buyers.", "ifFails": "reject", "note": "Only a bulk or wholesale enquiry route and no dealer words: unclear, Hold." },
-      { "code": "G3", "rule": "Owner-led or mid-sized, not a large national brand (a listed company, or a pan-India maker with its own dealer portal or app).", "ifFails": "reject", "note": "" },
-      { "code": "G4", "rule": "Has no dealer portal, Dealer Login or dealer-ordering product already in use (Marg eOrder, BizOm, FieldAssist, Botree, Dealerbuddy).", "ifFails": "hold", "note": "Ask: is it in use, and what does it cover? Not an automatic reject." },
-      { "code": "G5", "rule": "Regulated products (pesticides, fertiliser, seeds, agrochemicals, pharma) are not the main business.", "ifFails": "reject", "note": "Mixed shops where pumps, pipes or equipment dominate pass." },
-      { "code": "G6", "rule": "Not already in the pipeline, never opted out, never disqualified before.", "ifFails": "reject", "note": "The app checks this and the do-not-contact list." },
-      { "code": "G7", "rule": "A business contact route published on its own site or an official listing: an enquiry WhatsApp, a phone, a business email or an enquiry form.", "ifFails": "reject", "note": "A Gmail or similar address published on its own site counts. Never a guessed email or a personal profile." },
-      { "code": "G8", "rule": "The main visible need is not an offer exclusion (Tally or ERP sync, credit, delivery tracking, schemes, field sales).", "ifFails": "reject", "note": "Unsure: Hold." },
-      { "code": "G9", "rule": "Not an agri, pump or irrigation business in Raipur city (Urla, Siltara, Bhanpuri, Borjhara and Rawabhata included), and not a look-alike rival of the reference client anywhere (same products, brands or dealers).", "ifFails": "hold", "note": "Flag for Divyansh with the question: is this a rival of our reference client? Never a reject on G9 alone." }
+      {
+        "code": "G1",
+        "rule": "The head office, or the office where the owner sits, is in Chhattisgarh, Madhya Pradesh, Maharashtra or Odisha.",
+        "ifFails": "reject",
+        "note": "Only a branch in the four states: Hold, and ask who decides."
+      },
+      {
+        "code": "G2",
+        "rule": "Sells through dealers, retailers, sub-dealers or wholesale buyers.",
+        "ifFails": "reject",
+        "note": "Only a bulk or wholesale enquiry route and no dealer words: unclear, Hold."
+      },
+      {
+        "code": "G3",
+        "rule": "Owner-led or mid-sized, not a large national brand (a listed company, or a pan-India maker with its own dealer portal or app).",
+        "ifFails": "reject",
+        "note": ""
+      },
+      {
+        "code": "G4",
+        "rule": "Has no dealer portal, Dealer Login or dealer-ordering product already in use (Marg eOrder, BizOm, FieldAssist, Botree, Dealerbuddy).",
+        "ifFails": "hold",
+        "note": "Ask: is it in use, and what does it cover? Not an automatic reject."
+      },
+      {
+        "code": "G5",
+        "rule": "Regulated products (pesticides, fertiliser, seeds, agrochemicals, pharma) are not the main business.",
+        "ifFails": "reject",
+        "note": "Mixed shops where pumps, pipes or equipment dominate pass."
+      },
+      {
+        "code": "G6",
+        "rule": "Not already in the pipeline, never opted out, never disqualified before.",
+        "ifFails": "reject",
+        "note": "The app checks this and the do-not-contact list."
+      },
+      {
+        "code": "G7",
+        "rule": "A business contact route published on its own site or an official listing: an enquiry WhatsApp, a phone, a business email or an enquiry form.",
+        "ifFails": "reject",
+        "note": "A Gmail or similar address published on its own site counts. Never a guessed email or a personal profile."
+      },
+      {
+        "code": "G8",
+        "rule": "The main visible need is not an offer exclusion (Tally or ERP sync, credit, delivery tracking, schemes, field sales).",
+        "ifFails": "reject",
+        "note": "Unsure: Hold."
+      },
+      {
+        "code": "G9",
+        "rule": "Not an agri, pump or irrigation business in Raipur city (Urla, Siltara, Bhanpuri, Borjhara and Rawabhata included), and not a look-alike rival of the reference client anywhere (same products, brands or dealers).",
+        "ifFails": "hold",
+        "note": "Flag for Divyansh with the question: is this a rival of our reference client? Never a reject on G9 alone."
+      }
     ],
     "signals": {
       "lookFor": [
@@ -46,7 +150,12 @@
         { "phrase": "where to buy", "meaning": "Points buyers to dealers" }
       ],
       "searchWords": ["dealer enquiry", "manufacturer", "distributor", "wholesaler"],
-      "negatives": ["pesticide formulations", "fertiliser manufacturing", "agrochemical formulations", "pharma manufacturing"]
+      "negatives": [
+        "pesticide formulations",
+        "fertiliser manufacturing",
+        "agrochemical formulations",
+        "pharma manufacturing"
+      ]
     },
     "exclusions": [
       "A directory, marketplace, listicle, news or market-research page instead of the company's own site; a government body; a single counter with no dealers, retailers or wholesale buyers.",
@@ -62,7 +171,9 @@
         "Close: offer a 20-minute workflow-mapping call before any solution or quote."
       ],
       "proofWords": "a demo version of a system we built for a dealer-network supplier in Chhattisgarh, shown privately",
-      "approvedClaims": ["Buildory maps and builds scoped business software around the client's own process, and does the setup."],
+      "approvedClaims": [
+        "Buildory maps and builds scoped business software around the client's own process, and does the setup."
+      ],
       "claimsToAvoid": [
         "Guaranteed sales, savings, ROI or dealer adoption.",
         "\"Ready-made\", \"white-label\" or \"works for every industry out of the box\".",

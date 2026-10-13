@@ -49,7 +49,7 @@ export function Dropdown({
           role="menu"
           className={clsx(
             "vso-enter-popover absolute top-full z-50 mt-1.5 min-w-44 rounded-2xl bg-white p-1.5 ring-1 ring-neutral-900/5",
-            align === "right" ? "right-0" : "left-0"
+            align === "right" ? "right-0" : "left-0",
           )}
           data-align={align}
         >
@@ -70,9 +70,7 @@ export function Dropdown({
                   "flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold",
                   "transition-[color,background-color] duration-100",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
-                  it.danger
-                    ? "text-danger hover:bg-danger-surface"
-                    : "text-neutral-700 hover:bg-neutral-100"
+                  it.danger ? "text-danger hover:bg-danger-surface" : "text-neutral-700 hover:bg-neutral-100",
                 )}
               >
                 {it.icon && (
@@ -85,7 +83,7 @@ export function Dropdown({
                 )}
                 {it.label}
               </a>
-            )
+            ),
           )}
         </div>
       )}

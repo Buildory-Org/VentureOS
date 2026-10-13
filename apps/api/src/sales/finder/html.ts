@@ -5,8 +5,14 @@ import { clean } from "../../mcp/format.js";
 
 export type PageLink = { href: string; text: string };
 export type ParsedPage = {
-  url: string; title: string; siteName: string; ogType: string; jsonLdTypes: string[];
-  lines: string[]; links: PageLink[]; forms: { count: number; enquiry: boolean; login: boolean };
+  url: string;
+  title: string;
+  siteName: string;
+  ogType: string;
+  jsonLdTypes: string[];
+  lines: string[];
+  links: PageLink[];
+  forms: { count: number; enquiry: boolean; login: boolean };
 };
 
 const MAX_LINES = 5_000;
@@ -15,9 +21,51 @@ const MAX_LINKS = 1_000;
 const LONG_LINE = 1_500;
 
 const NAMED: Record<string, string> = {
-  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", ensp: " ", emsp: " ", thinsp: " ", ndash: "–", mdash: "—", hellip: "…", lsquo: "‘", rsquo: "’", sbquo: "‚",
-  ldquo: "“", rdquo: "”", bdquo: "„", bull: "•", middot: "·", copy: "©", reg: "®", trade: "™", deg: "°", times: "×", divide: "÷", rarr: "→", larr: "←", laquo: "«", raquo: "»",
-  euro: "€", pound: "£", yen: "¥", cent: "¢", sect: "§", para: "¶", shy: "", zwj: "", zwnj: "", frac12: "½", frac14: "¼", frac34: "¾", plusmn: "±", micro: "µ", acute: "´",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  ensp: " ",
+  emsp: " ",
+  thinsp: " ",
+  ndash: "–",
+  mdash: "—",
+  hellip: "…",
+  lsquo: "‘",
+  rsquo: "’",
+  sbquo: "‚",
+  ldquo: "“",
+  rdquo: "”",
+  bdquo: "„",
+  bull: "•",
+  middot: "·",
+  copy: "©",
+  reg: "®",
+  trade: "™",
+  deg: "°",
+  times: "×",
+  divide: "÷",
+  rarr: "→",
+  larr: "←",
+  laquo: "«",
+  raquo: "»",
+  euro: "€",
+  pound: "£",
+  yen: "¥",
+  cent: "¢",
+  sect: "§",
+  para: "¶",
+  shy: "",
+  zwj: "",
+  zwnj: "",
+  frac12: "½",
+  frac14: "¼",
+  frac34: "¾",
+  plusmn: "±",
+  micro: "µ",
+  acute: "´",
 };
 
 /** HTML character references (named, decimal and hex) as the characters they stand for; unknown ones stay as written. */
@@ -62,7 +110,10 @@ function* elements(html: string, tag: string, keep: (attrs: string) => boolean =
     if (gt < 0) return;
     const attrs = html.slice(open.lastIndex, gt);
     // A tag the caller skips: any tag that starts inside its attributes ends at the same ">", with a part of the same attributes.
-    if (!keep(attrs)) { open.lastIndex = gt + 1; continue; }
+    if (!keep(attrs)) {
+      open.lastIndex = gt + 1;
+      continue;
+    }
     close.lastIndex = gt + 1;
     const closing = close.exec(html);
     if (!closing) return;
@@ -73,7 +124,8 @@ function* elements(html: string, tag: string, keep: (attrs: string) => boolean =
 
 /** `html` without its comments, as html.replace(/<!--[\s\S]*?-->/g, " "): an unclosed comment means no later one closes either. */
 function withoutComments(html: string): string {
-  let out = "", from = 0;
+  let out = "",
+    from = 0;
   for (let start = html.indexOf("<!--"); start >= 0; start = html.indexOf("<!--", from)) {
     const end = html.indexOf("-->", start + 4);
     if (end < 0) break;
@@ -90,14 +142,18 @@ function withoutComments(html: string): string {
 export function withoutElements(html: string, names: readonly string[]): string {
   const open = new RegExp(`<(${names.join("|")})\\b`, "gi");
   const unclosed = new Set<string>();
-  let out = "", from = 0;
+  let out = "",
+    from = 0;
   for (let match = open.exec(html); match; match = open.exec(html)) {
     const name = match[1]!.toLowerCase();
     if (unclosed.has(name)) continue;
     const close = new RegExp(`<\\/${name}\\s*>`, "gi");
     close.lastIndex = open.lastIndex;
     const closing = close.exec(html);
-    if (!closing) { unclosed.add(name); continue; }
+    if (!closing) {
+      unclosed.add(name);
+      continue;
+    }
     out += `${html.slice(from, match.index)} `;
     from = open.lastIndex = close.lastIndex;
   }
@@ -145,7 +201,10 @@ function namesContactField(attrs: string): boolean {
 }
 
 /** One line of text: entities decoded, hidden characters removed, white space collapsed. */
-const textOf =(html: string) => clean(decodeEntities(replaceTags(html, /<[^>]*>/g, " "))).replace(/\s+/g, " ").trim();
+const textOf = (html: string) =>
+  clean(decodeEntities(replaceTags(html, /<[^>]*>/g, " ")))
+    .replace(/\s+/g, " ")
+    .trim();
 
 /** The attributes of one tag ("href", "content"...), lower-cased names, decoded values. */
 export function attributes(tag: string): Record<string, string> {
@@ -162,13 +221,20 @@ function jsonLdTypes(html: string): string[] {
   const types = new Set<string>();
   const visit = (value: unknown, depth: number) => {
     if (depth > 4 || types.size >= 20 || !value || typeof value !== "object") return;
-    if (Array.isArray(value)) { for (const item of value.slice(0, 50)) visit(item, depth + 1); return; }
+    if (Array.isArray(value)) {
+      for (const item of value.slice(0, 50)) visit(item, depth + 1);
+      return;
+    }
     const record = value as Record<string, unknown>;
     for (const type of [record["@type"]].flat()) if (typeof type === "string") types.add(type.slice(0, 60));
     if (record["@graph"]) visit(record["@graph"], depth + 1);
   };
   for (const script of elements(html, "script", (attrs) => /type\s*=\s*["']?application\/ld\+json/i.test(attrs))) {
-    try { visit(JSON.parse(script.inner.slice(0, 100_000)), 0); } catch { /* not JSON: ignored */ }
+    try {
+      visit(JSON.parse(script.inner.slice(0, 100_000)), 0);
+    } catch {
+      /* not JSON: ignored */
+    }
   }
   return [...types];
 }
@@ -183,20 +249,29 @@ function absolute(href: string, base: string): string | undefined {
     if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
     url.hash = "";
     return url.href.slice(0, 2_000);
-  } catch { return undefined; }
+  } catch {
+    return undefined;
+  }
 }
 
 /** Splits text into lines at block tags; very long lines are cut again at sentence ends. */
 function visibleLines(html: string): string[] {
-  const block = /<\/?(?:p|div|br|li|ul|ol|dl|dt|dd|h[1-6]|tr|td|th|table|thead|tbody|tfoot|section|article|header|footer|nav|aside|main|address|blockquote|figure|figcaption|pre|hr|form|fieldset|legend|label|option|select|button|summary|details|caption)\b[^>]*>/gi;
+  const block =
+    /<\/?(?:p|div|br|li|ul|ol|dl|dt|dd|h[1-6]|tr|td|th|table|thead|tbody|tfoot|section|article|header|footer|nav|aside|main|address|blockquote|figure|figcaption|pre|hr|form|fieldset|legend|label|option|select|button|summary|details|caption)\b[^>]*>/gi;
   const lines: string[] = [];
   for (const raw of replaceTags(html, block, "\n").split("\n")) {
     const line = textOf(raw);
     if (!line) continue;
-    if (line.length <= LONG_LINE) { lines.push(line); continue; }
+    if (line.length <= LONG_LINE) {
+      lines.push(line);
+      continue;
+    }
     let chunk = "";
     for (const sentence of line.split(/(?<=[.!?])\s+/)) {
-      if (chunk && chunk.length + sentence.length + 1 > LONG_LINE) { lines.push(chunk); chunk = ""; }
+      if (chunk && chunk.length + sentence.length + 1 > LONG_LINE) {
+        lines.push(chunk);
+        chunk = "";
+      }
       chunk = chunk ? `${chunk} ${sentence}` : sentence.slice(0, LONG_LINE * 2);
     }
     if (chunk) lines.push(chunk);
@@ -209,10 +284,19 @@ function visibleLines(html: string): string[] {
 export function parseHtml(html: string, pageUrl: string): ParsedPage {
   const types = jsonLdTypes(html);
   // Nothing that runs or hides is text: scripts, styles, noscript, templates, inline SVG, frames, and comments.
-  const stripped = withoutElements(withoutComments(html), ["script", "style", "noscript", "template", "svg", "iframe", "object", "canvas"])
-    .replace(/<(script|style|noscript|template)\b[\s\S]*$/i, " ");
+  const stripped = withoutElements(withoutComments(html), [
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "svg",
+    "iframe",
+    "object",
+    "canvas",
+  ]).replace(/<(script|style|noscript|template)\b[\s\S]*$/i, " ");
   const metas = matchTags(stripped, /<meta\b([^>]*)>/gi).map((match) => attributes(match[1]!));
-  const meta = (key: string) => metas.find((item) => (item.property ?? item.name ?? "").toLowerCase() === key)?.content ?? "";
+  const meta = (key: string) =>
+    metas.find((item) => (item.property ?? item.name ?? "").toLowerCase() === key)?.content ?? "";
   const baseHref = matchTags(stripped, /<base\b([^>]*)>/gi)[0];
   const base = (baseHref && absolute(attributes(baseHref[1]!).href ?? "", pageUrl)) || pageUrl;
   const links: PageLink[] = [];
@@ -221,9 +305,19 @@ export function parseHtml(html: string, pageUrl: string): ParsedPage {
     const attrs = attributes(anchor.attrs);
     const href = absolute(attrs.href ?? "", base);
     if (!href) continue;
-    links.push({ href, text: (textOf(anchor.inner) || clean(attrs["aria-label"] ?? attrs.title ?? "").replace(/\s+/g, " ").trim()).slice(0, 300) });
+    links.push({
+      href,
+      text: (
+        textOf(anchor.inner) ||
+        clean(attrs["aria-label"] ?? attrs.title ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+      ).slice(0, 300),
+    });
   }
-  let count = 0, enquiry = false, login = false;
+  let count = 0,
+    enquiry = false,
+    login = false;
   for (const form of elements(stripped, "form")) {
     count++;
     const inputs = inputTags(form.inner);
@@ -234,7 +328,16 @@ export function parseHtml(html: string, pageUrl: string): ParsedPage {
   }
   const title = elements(stripped, "title").next().value;
   return {
-    url: pageUrl, title: textOf(title?.inner ?? "").slice(0, 300), siteName: clean(meta("og:site_name") || meta("application-name")).replace(/\s+/g, " ").trim().slice(0, 200),
-    ogType: meta("og:type").toLowerCase().slice(0, 40), jsonLdTypes: types, lines: visibleLines(withoutFirstTitle(stripped)), links, forms: { count, enquiry, login },
+    url: pageUrl,
+    title: textOf(title?.inner ?? "").slice(0, 300),
+    siteName: clean(meta("og:site_name") || meta("application-name"))
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 200),
+    ogType: meta("og:type").toLowerCase().slice(0, 40),
+    jsonLdTypes: types,
+    lines: visibleLines(withoutFirstTitle(stripped)),
+    links,
+    forms: { count, enquiry, login },
   };
 }

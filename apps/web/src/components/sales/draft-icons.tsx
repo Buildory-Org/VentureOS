@@ -1,6 +1,14 @@
 import { forwardRef } from "react";
 import { HugeiconsIcon, type HugeiconsIconProps, type IconSvgElement } from "@hugeicons/react";
-import { Call02Icon, CallEnd01Icon, CallMissed01Icon, Delete02Icon, Linkedin01Icon, UserBlock01Icon, WhatsappIcon } from "@hugeicons/core-free-icons";
+import {
+  Call02Icon,
+  CallEnd01Icon,
+  CallMissed01Icon,
+  Delete02Icon,
+  Linkedin01Icon,
+  UserBlock01Icon,
+  WhatsappIcon,
+} from "@hugeicons/core-free-icons";
 
 // Icons the shared set (components/ui/icons.tsx) does not export. Same wrapper, same stroke width.
 type IconProps = Omit<HugeiconsIconProps, "icon">;

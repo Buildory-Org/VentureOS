@@ -13,7 +13,10 @@ export const leaderboardQuerySchema = z.object({
   ventureId: idSchema.optional(),
   learners: z.enum(["true", "false"]).optional(),
   /** A weekly edition's first day (YYYY-MM-DD): the breakdown as that edition saw it, as of the Saturday it closed. */
-  week: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  week: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 export const leaderboardEntrySchema = z.object({
@@ -41,7 +44,12 @@ export const leaderboardEntrySchema = z.object({
   /** Open tasks past due right now. */
   overdueNow: z.number().int(),
 });
-export const leaderboardReviewerSchema = z.object({ userId: idSchema, name: z.string(), reviews: z.number().int(), medianHours: z.number() });
+export const leaderboardReviewerSchema = z.object({
+  userId: idSchema,
+  name: z.string(),
+  reviews: z.number().int(),
+  medianHours: z.number(),
+});
 export const leaderboardBoardSchema = z.object({
   people: z.array(leaderboardEntrySchema),
   team: z.object({ reliability: z.number(), quality: z.number() }),
@@ -60,13 +68,21 @@ export const leaderboardPersonSchema = z.object({
   entry: leaderboardEntrySchema,
   period: z.object({ key: leaderboardPeriodSchema, from: isoDateSchema, to: isoDateSchema }),
   /** The tasks that counted and what each earned (only tasks the viewer can open). */
-  tasks: z.array(z.object({
-    id: idSchema, title: z.string(), dueAt: isoDateSchema, deliveredAt: isoDateSchema.optional(),
-    outcome: leaderboardTaskOutcomeSchema, credit: z.number(), minutesLate: z.number().int().optional(),
-    /** Hours added to the due date: time spent blocked, and the shortfall when it was given with less time than its estimate. */
-    blockedHours: z.number().optional(), allowanceHours: z.number().optional(),
-    firstTimeRight: z.boolean().optional(),
-  })),
+  tasks: z.array(
+    z.object({
+      id: idSchema,
+      title: z.string(),
+      dueAt: isoDateSchema,
+      deliveredAt: isoDateSchema.optional(),
+      outcome: leaderboardTaskOutcomeSchema,
+      credit: z.number(),
+      minutesLate: z.number().int().optional(),
+      /** Hours added to the due date: time spent blocked, and the shortfall when it was given with less time than its estimate. */
+      blockedHours: z.number().optional(),
+      allowanceHours: z.number().optional(),
+      firstTimeRight: z.boolean().optional(),
+    }),
+  ),
   /** Counted tasks in ventures or groups the viewer can't open. */
   hidden: z.number().int(),
 });
@@ -82,7 +98,13 @@ export const leaderboardWeeklySchema = z.object({
   seen: z.boolean(),
   minimumTasks: z.number().int(),
 });
-export const leaderboardWeeklyStatusSchema = z.object({ id: z.string(), weekStart: isoDateSchema, weekEnd: isoDateSchema, ranked: z.number().int(), seen: z.boolean() });
+export const leaderboardWeeklyStatusSchema = z.object({
+  id: z.string(),
+  weekStart: isoDateSchema,
+  weekEnd: isoDateSchema,
+  ranked: z.number().int(),
+  seen: z.boolean(),
+});
 
 export type LeaderboardPeriod = z.infer<typeof leaderboardPeriodSchema>;
 export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;

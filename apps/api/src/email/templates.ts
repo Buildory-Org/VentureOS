@@ -10,9 +10,22 @@ export type RenderedEmail = { subject: string; html: string; text: string; attac
 
 const HEADING = "'Cabinet Grotesk','Plus Jakarta Sans',Helvetica,Arial,sans-serif";
 const BODY = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
-const C = { page: "#f3f6f2", card: "#ffffff", ink: "#14211a", ink2: "#4a5a50", muted: "#78877d", line: "#e3e9e1", chip: "#eef6f0", chipInk: "#165c33", hero: "#0f3d24", green: "#177a3d", mint: "#a7f3c4" };
+const C = {
+  page: "#f3f6f2",
+  card: "#ffffff",
+  ink: "#14211a",
+  ink2: "#4a5a50",
+  muted: "#78877d",
+  line: "#e3e9e1",
+  chip: "#eef6f0",
+  chipInk: "#165c33",
+  hero: "#0f3d24",
+  green: "#177a3d",
+  mint: "#a7f3c4",
+};
 
-const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]!));
+const escape = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 const art = (): EmailAttachment[] => [
   { filename: "hero.png", content: EMAIL_ART.hero, content_id: "vso-hero" },
   { filename: "button.png", content: EMAIL_ART.button, content_id: "vso-button" },
@@ -45,7 +58,27 @@ function brandFooter(origin: string, legal: string) {
 }
 
 /** The shared shell: dithered hero (kicker + headline), white card body, card footer, and the brand footer below. */
-function shell({ title, preheader, kicker, headline, heroHeight, body, footer, legal, origin }: { title: string; preheader: string; kicker: string; headline: string; heroHeight: number; body: string; footer: string; legal: string; origin: string }) {
+function shell({
+  title,
+  preheader,
+  kicker,
+  headline,
+  heroHeight,
+  body,
+  footer,
+  legal,
+  origin,
+}: {
+  title: string;
+  preheader: string;
+  kicker: string;
+  headline: string;
+  heroHeight: number;
+  body: string;
+  footer: string;
+  legal: string;
+  origin: string;
+}) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">
 <title>${escape(title)}</title>
@@ -78,16 +111,39 @@ function shell({ title, preheader, kicker, headline, heroHeight, body, footer, l
 </body></html>`;
 }
 
-const chip = (label: string, role = false) => `<span style="display:inline-block;margin:0 6px 6px 0;padding:3px 11px;border-radius:999px;font-size:12.5px;font-weight:700;line-height:18px;${role ? "background:#d6f3e9;color:#085041;border:1px solid #a9e2cf;" : `background:${C.chip};color:${C.chipInk};`}">${escape(label)}</span>`;
-const row = (label: string, value: string) => `<tr><td valign="top" style="width:96px;padding:6px 0;font-size:13px;font-weight:600;color:${C.muted};">${label}</td><td style="padding:6px 0;font-size:14px;color:${C.ink};">${value}</td></tr>`;
-const feature = (glyph: string, color: string, title: string, text: string) => `<td class="vso-col" valign="top" width="50%" style="padding:8px 8px 8px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+const chip = (label: string, role = false) =>
+  `<span style="display:inline-block;margin:0 6px 6px 0;padding:3px 11px;border-radius:999px;font-size:12.5px;font-weight:700;line-height:18px;${role ? "background:#d6f3e9;color:#085041;border:1px solid #a9e2cf;" : `background:${C.chip};color:${C.chipInk};`}">${escape(label)}</span>`;
+const row = (label: string, value: string) =>
+  `<tr><td valign="top" style="width:96px;padding:6px 0;font-size:13px;font-weight:600;color:${C.muted};">${label}</td><td style="padding:6px 0;font-size:14px;color:${C.ink};">${value}</td></tr>`;
+const feature = (
+  glyph: string,
+  color: string,
+  title: string,
+  text: string,
+) => `<td class="vso-col" valign="top" width="50%" style="padding:8px 8px 8px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
   <td valign="top" style="width:30px;"><div style="width:30px;height:30px;border-radius:9px;background:${color};color:#ffffff;font-size:14px;font-weight:800;line-height:30px;text-align:center;">${glyph}</div></td>
   <td valign="top" style="padding-left:10px;font-family:${BODY};font-size:13.5px;line-height:19px;color:${C.ink2};"><b style="display:block;color:${C.ink};">${title}</b>${text}</td></tr></table></td>`;
 
-const longDate = (value: Date) => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(value);
-const joinNames = (names: string[]) => names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} & ${names.at(-1)}`;
+const longDate = (value: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(value);
+const joinNames = (names: string[]) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} & ${names.at(-1)}`;
 
-export type InviteEmailInput = { inviterName: string; workspaceName: string; role: string; ventures: string[]; groups: string[]; url: string; expiresAt: Date };
+export type InviteEmailInput = {
+  inviterName: string;
+  workspaceName: string;
+  role: string;
+  ventures: string[];
+  groups: string[];
+  url: string;
+  expiresAt: Date;
+};
 
 export function renderInviteEmail(input: InviteEmailInput): RenderedEmail {
   const firstName = input.inviterName.split(/\s+/)[0] || input.inviterName;
@@ -111,7 +167,17 @@ export function renderInviteEmail(input: InviteEmailInput): RenderedEmail {
     ${feature("&#8984;", "#ea580c", "Claude, connected", "Ask Claude Code what's on your plate, once you've joined.")}
   </tr></table>`;
   const footer = `Button not working? Paste this link into your browser:<br><a href="${escape(input.url)}" style="color:${C.chipInk};word-break:break-all;">${escape(input.url)}</a><br><br>This invitation expires on <b style="color:${C.ink2};">${expires}</b>. If it has expired, ask ${escape(firstName)} to send a new one.<br><br>Not expecting this, or wrong address? You can ignore this email. Nothing happens unless you accept.`;
-  const html = shell({ title: `You're invited to ${where}`, preheader: `${input.inviterName} invited you to join ${where} as a ${role}.`, kicker: "Invitation", headline: `You're invited to<br>${escape(where)}`, heroHeight: 200, body, footer, legal: `Sent by ${escape(input.workspaceName)} because ${escape(input.inviterName)} invited this address.`, origin: new URL(input.url).origin });
+  const html = shell({
+    title: `You're invited to ${where}`,
+    preheader: `${input.inviterName} invited you to join ${where} as a ${role}.`,
+    kicker: "Invitation",
+    headline: `You're invited to<br>${escape(where)}`,
+    heroHeight: 200,
+    body,
+    footer,
+    legal: `Sent by ${escape(input.workspaceName)} because ${escape(input.inviterName)} invited this address.`,
+    origin: new URL(input.url).origin,
+  });
   const text = [
     `${input.inviterName} invited you to ${input.workspaceName}`,
     "",
@@ -134,7 +200,23 @@ export function renderSignInEmail(input: { url: string; email: string; minutes: 
   const body = `<p style="margin:0;">Use the button below to sign in to Venture Studio as <b style="color:${C.ink};">${escape(input.email)}</b>. It works once and expires in ${input.minutes} minutes.</p>
   ${button("Sign in to Venture Studio", input.url)}`;
   const footer = `Button not working? Paste this link into your browser:<br><a href="${escape(input.url)}" style="color:${C.chipInk};word-break:break-all;">${escape(input.url)}</a><br><br>Didn't ask to sign in? You can ignore this email. Nobody can sign in without this link.`;
-  const html = shell({ title: "Your sign-in link", preheader: `Your one-time sign-in link. It expires in ${input.minutes} minutes.`, kicker: "Sign in", headline: "Your sign-in link", heroHeight: 150, body, footer, legal: "Sent by Venture Studio because someone asked to sign in with this address.", origin: new URL(input.url).origin });
-  const text = [`Sign in to Venture Studio as ${input.email}:`, input.url, "", `The link works once and expires in ${input.minutes} minutes.`, "Didn't ask to sign in? You can ignore this email. Nobody can sign in without this link."].join("\n");
+  const html = shell({
+    title: "Your sign-in link",
+    preheader: `Your one-time sign-in link. It expires in ${input.minutes} minutes.`,
+    kicker: "Sign in",
+    headline: "Your sign-in link",
+    heroHeight: 150,
+    body,
+    footer,
+    legal: "Sent by Venture Studio because someone asked to sign in with this address.",
+    origin: new URL(input.url).origin,
+  });
+  const text = [
+    `Sign in to Venture Studio as ${input.email}:`,
+    input.url,
+    "",
+    `The link works once and expires in ${input.minutes} minutes.`,
+    "Didn't ask to sign in? You can ignore this email. Nobody can sign in without this link.",
+  ].join("\n");
   return { subject, html, text, attachments: art() };
 }

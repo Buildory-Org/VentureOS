@@ -23,13 +23,7 @@ export function AlertStrip({
 }) {
   const t = tones[tone];
   return (
-    <div
-      className={clsx(
-        "flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold",
-        t.bg,
-        t.fg
-      )}
-    >
+    <div className={clsx("flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold", t.bg, t.fg)}>
       <HugeiconsIcon icon={t.icon} size={15} strokeWidth={1.75} />
       <span className="flex-1">{text}</span>
       {cta && (

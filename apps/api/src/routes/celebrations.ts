@@ -19,7 +19,12 @@ export function celebrationRoutes(database: Database, config: AppConfig): Router
   router.post("/celebrations/seen", async (req, res) => {
     const actor = req.actor!;
     const { ids } = celebrationSeenSchema.parse(req.body);
-    const result = await db.collection("celebrations").updateMany({ _id: { $in: ids }, workspaceId: actor.membership.workspaceId, userId: actor.id, state: "pending" }, { $set: { state: "seen", seenAt: new Date() } });
+    const result = await db
+      .collection("celebrations")
+      .updateMany(
+        { _id: { $in: ids }, workspaceId: actor.membership.workspaceId, userId: actor.id, state: "pending" },
+        { $set: { state: "seen", seenAt: new Date() } },
+      );
     res.json({ ok: true, data: { updated: result.modifiedCount } });
   });
 
@@ -30,12 +35,22 @@ export function celebrationRoutes(database: Database, config: AppConfig): Router
     const workspaceId = actor.membership.workspaceId;
     const now = new Date();
     const pausedUntil = hours ? new Date(now.getTime() + hours * HOUR) : undefined;
-    await db.collection("celebration_settings").updateOne(
-      { _id: celebrationSettingsId(workspaceId, actor.id) },
-      pausedUntil ? { $set: { workspaceId, userId: actor.id, pausedUntil, updatedAt: now } } : { $set: { workspaceId, userId: actor.id, updatedAt: now }, $unset: { pausedUntil: "" } },
-      { upsert: true },
-    );
-    if (pausedUntil) await db.collection("celebrations").updateMany({ workspaceId, userId: actor.id, state: "pending" }, { $set: { state: "skipped", updatedAt: now } });
+    await db
+      .collection("celebration_settings")
+      .updateOne(
+        { _id: celebrationSettingsId(workspaceId, actor.id) },
+        pausedUntil
+          ? { $set: { workspaceId, userId: actor.id, pausedUntil, updatedAt: now } }
+          : { $set: { workspaceId, userId: actor.id, updatedAt: now }, $unset: { pausedUntil: "" } },
+        { upsert: true },
+      );
+    if (pausedUntil)
+      await db
+        .collection("celebrations")
+        .updateMany(
+          { workspaceId, userId: actor.id, state: "pending" },
+          { $set: { state: "skipped", updatedAt: now } },
+        );
     res.json({ ok: true, data: { pausedUntil: pausedUntil?.toISOString() ?? null } });
   });
 

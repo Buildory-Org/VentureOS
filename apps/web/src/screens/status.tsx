@@ -24,10 +24,7 @@ const services = [
 export function StatusScreen() {
   return (
     <div className="mx-auto max-w-[900px] p-6">
-      <PageHeader
-        title="System Status"
-        subtitle="All systems operational — last checked just now"
-      />
+      <PageHeader title="System Status" subtitle="All systems operational — last checked just now" />
       <Anim delay={80}>
         <div className="mb-5 flex items-center gap-3 rounded-2xl bg-success-surface px-5 py-4">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-success text-white">
@@ -35,7 +32,9 @@ export function StatusScreen() {
           </span>
           <div>
             <p className="text-[13.5px] font-bold text-success-text">All systems operational</p>
-            <p className="text-[11.5px] font-medium text-success-text/70">30-day uptime 99.9% · next maintenance Sun 2–4am</p>
+            <p className="text-[11.5px] font-medium text-success-text/70">
+              30-day uptime 99.9% · next maintenance Sun 2–4am
+            </p>
           </div>
         </div>
       </Anim>

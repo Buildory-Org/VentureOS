@@ -9,13 +9,18 @@ let requested = false;
 const listeners = new Set<() => void>();
 
 export function publishFocus(value: { endsAt: string; pausedAt?: string; completedAt?: string | null } | null) {
-  current = value && !value.completedAt ? { endsAt: value.endsAt, ...(value.pausedAt ? { pausedAt: value.pausedAt } : {}) } : null;
+  current =
+    value && !value.completedAt
+      ? { endsAt: value.endsAt, ...(value.pausedAt ? { pausedAt: value.pausedAt } : {}) }
+      : null;
   listeners.forEach((listener) => listener());
 }
 
 export function subscribeFocus(listener: () => void) {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export const getFocus = () => current;
@@ -24,5 +29,9 @@ export const getFocus = () => current;
 export function ensureFocusLoaded() {
   if (requested || current !== undefined) return;
   requested = true;
-  getCurrentLiveFocus().then(publishFocus).catch(() => { requested = false; });
+  getCurrentLiveFocus()
+    .then(publishFocus)
+    .catch(() => {
+      requested = false;
+    });
 }

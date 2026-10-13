@@ -5,4 +5,10 @@ import { PlaysScreen } from "@/screens/sales/plays";
 
 export const metadata: Metadata = { title: "Plays — Sales — Venture Studio OS" };
 
-export default function Page() { return <Suspense fallback={<SalesFallback />}><PlaysScreen /></Suspense>; }
+export default function Page() {
+  return (
+    <Suspense fallback={<SalesFallback />}>
+      <PlaysScreen />
+    </Suspense>
+  );
+}

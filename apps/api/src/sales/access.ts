@@ -20,7 +20,9 @@ export function canSeeVenture(actor: Actor, ventureId: unknown): boolean {
 
 /** Admin, or the head of this venture: reassign, delete, approve plays and brain, first-batch approval, suppression removal. */
 export function isHeadOf(actor: Actor, ventureId: unknown): boolean {
-  return canSeeVenture(actor, ventureId) && (actor.membership.role === "admin" || actor.membership.role === "venture_head");
+  return (
+    canSeeVenture(actor, ventureId) && (actor.membership.role === "admin" || actor.membership.role === "venture_head")
+  );
 }
 
 /** Everyone but learners writes in the ventures they can open: create leads, propose plays and brain items, review and veto drafts. */
@@ -60,12 +62,25 @@ export function ventureScope(actor: Actor, ventureId?: string, field = "ventureI
 
 /** The venture exists in the workspace, is not archived, and the actor can open it. */
 export async function loadVenture(db: AppDb, actor: Actor, ventureId: string): Promise<AppDocument> {
-  const venture = await db.collection("ventures").findOne({ _id: ventureId, workspaceId: actor.membership.workspaceId, status: { $ne: "archived" } });
+  const venture = await db
+    .collection("ventures")
+    .findOne({ _id: ventureId, workspaceId: actor.membership.workspaceId, status: { $ne: "archived" } });
   if (!venture || !canSeeVenture(actor, ventureId)) throw notFound("Venture");
   return venture;
 }
 
 /** The lead owner must be an active member of the venture (or an admin, who opens every venture). */
-export async function assertOwnerInVenture(db: AppDb, workspaceId: string, ownerId: string, ventureId: string, session?: import("mongodb").ClientSession): Promise<void> {
-  if (!(await db.collection("memberships").findOne({ workspaceId, userId: ownerId, status: "active", ...listedInOrAdmin(ventureId) }, { session }))) throw new AppError(400, "BAD_REQUEST", "The deal owner must be an active member of this venture");
+export async function assertOwnerInVenture(
+  db: AppDb,
+  workspaceId: string,
+  ownerId: string,
+  ventureId: string,
+  session?: import("mongodb").ClientSession,
+): Promise<void> {
+  if (
+    !(await db
+      .collection("memberships")
+      .findOne({ workspaceId, userId: ownerId, status: "active", ...listedInOrAdmin(ventureId) }, { session }))
+  )
+    throw new AppError(400, "BAD_REQUEST", "The deal owner must be an active member of this venture");
 }

@@ -5,7 +5,15 @@ import { trustProxySetting, type AppConfig } from "./config.js";
 import type { Auth } from "./auth.js";
 import type { ObjectStore } from "./storage.js";
 import { LocalObjectStore } from "./storage.js";
-import { clientAddressFromHeader, createActorResolver, createIdentityResolver, rateLimit, requestContext, requireActor, requireIdentity } from "./middleware.js";
+import {
+  clientAddressFromHeader,
+  createActorResolver,
+  createIdentityResolver,
+  rateLimit,
+  requestContext,
+  requireActor,
+  requireIdentity,
+} from "./middleware.js";
 import { AppError, createErrorHandler } from "./errors.js";
 import { hierarchyRoutes } from "./routes/hierarchy.js";
 import { workRoutes } from "./routes/work.js";
@@ -52,15 +60,29 @@ export function createApp(database: Database, config: AppConfig, auth: Auth, sto
   app.use(mcpRouter(database.db, config));
   // MCP tools act as the token owner, but only on the routes the tools use; everything else (tokens, admin, invitations,
   // deletes, push subscriptions, uploads...) is refused even if a future tool tried to reach it.
-  app.use((req, _res, next) => next(req.interfaceChannel === "mcp" && !isMcpRoute(req.method, req.path) ? new AppError(403, "FORBIDDEN", "Not available to Claude connections") : undefined));
+  app.use((req, _res, next) =>
+    next(
+      req.interfaceChannel === "mcp" && !isMcpRoute(req.method, req.path)
+        ? new AppError(403, "FORBIDDEN", "Not available to Claude connections")
+        : undefined,
+    ),
+  );
   // The office PC lead-finding worker: a Bearer token with the sales:engine scope, never a session, a dev header or the MCP loopback.
   app.use("/v1/sales/engine", salesEngineRoutes(database));
   // The demo copy's one-click sign-in (off unless DEMO_EMAIL is set); before the session gate, since the visitor is not signed in yet.
   app.use("/v1/demo", demoRoutes(database, config, auth));
-  app.get("/health", async (_req, res) => { await database.db.command({ ping: 1 }); res.json({ ok: true, mode: config.APP_MODE, transactions: database.transactions, storage: store.kind }); });
+  app.get("/health", async (_req, res) => {
+    await database.db.command({ ping: 1 });
+    res.json({ ok: true, mode: config.APP_MODE, transactions: database.transactions, storage: store.kind });
+  });
   app.use("/v1/setup/first-admin", rateLimit(database.db, 60, 60_000, "setup-ip"));
   app.use("/v1", firstAdminRoutes(database, config, auth));
-  app.use("/v1/invitations/accept", rateLimit(database.db, 60, 60_000, "invite-ip"), requireIdentity(resolveIdentity), rateLimit(database.db, 30, 60_000, "invite-user"));
+  app.use(
+    "/v1/invitations/accept",
+    rateLimit(database.db, 60, 60_000, "invite-ip"),
+    requireIdentity(resolveIdentity),
+    rateLimit(database.db, 30, 60_000, "invite-user"),
+  );
   app.use("/v1", invitationAcceptanceRoutes(database));
   // Calendar apps read the private calendar link without signing in: the secret in its address is the key.
   app.use("/v1/calendar/feed", rateLimit(database.db, 600, 60_000, "calendar-feed-ip"));
@@ -68,7 +90,9 @@ export function createApp(database: Database, config: AppConfig, auth: Auth, sto
   const readLimit = rateLimit(database.db, 300, 60_000, "actor-read");
   const writeLimit = rateLimit(database.db, 120, 60_000, "actor-write");
   app.use("/v1", requireActor(resolveActor, rateLimit(database.db, 60, 60_000, "anonymous-ip")));
-  app.use("/v1", (req, res, next) => (req.method === "GET" || req.method === "HEAD" ? readLimit : writeLimit)(req, res, next));
+  app.use("/v1", (req, res, next) =>
+    (req.method === "GET" || req.method === "HEAD" ? readLimit : writeLimit)(req, res, next),
+  );
   app.use("/v1/sales/leads/import", express.json({ limit: "12mb" }));
   app.use("/v1", hierarchyRoutes(database.db));
   app.use("/v1", workRoutes(database));
@@ -92,7 +116,14 @@ export function createApp(database: Database, config: AppConfig, auth: Auth, sto
   app.use("/v1", searchRoutes(database.db));
   app.use("/v1", calendarRoutes(database));
   app.use("/v1", calendarFeedRoutes(database, config));
-  app.use((_req, res) => res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "Route not found", requestId: res.getHeader("x-request-id") } }));
+  app.use((_req, res) =>
+    res
+      .status(404)
+      .json({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "Route not found", requestId: res.getHeader("x-request-id") },
+      }),
+  );
   app.use(createErrorHandler(database.db));
   return { app, resolveActor, localStore };
 }

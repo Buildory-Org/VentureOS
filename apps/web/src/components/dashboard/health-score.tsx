@@ -6,13 +6,7 @@ import { Widget } from "./widget";
 const SCORE = 78;
 
 /** Widget ⑤ — AI Business Health Score: animated semicircle gauge. */
-export function HealthScore({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function HealthScore({ delay = 0, className }: { delay?: number; className?: string }) {
   const [v, setV] = useState(0);
 
   useEffect(() => {

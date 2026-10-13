@@ -24,12 +24,7 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { Drawer, drawerForms } from "@/components/ui/drawer";
 import { ghostBtn, primaryBtn } from "@/components/ui/btn";
 import { inr } from "@/lib/format";
-import {
-  purchaseOrders,
-  vendors,
-  purchaseRequests,
-  goodsReceipts,
-} from "@/lib/mock-modules";
+import { purchaseOrders, vendors, purchaseRequests, goodsReceipts } from "@/lib/mock-modules";
 
 const tabs = [
   { key: "orders", label: "Purchase Orders", badge: 5 },
@@ -44,10 +39,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="Purchase"
-        subtitle="Vendors, purchase orders and goods received"
-      >
+      <PageHeader title="Purchase" subtitle="Vendors, purchase orders and goods received">
         <Dropdown
           align="right"
           items={[{ label: "Export CSV", icon: Copy01Icon }]}
@@ -88,8 +80,13 @@ function Inner() {
             rows={purchaseOrders.map((o) => ({
               id: o.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{o.id}</span>,
-                o.date, o.vendor, o.items, inr(o.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {o.id}
+                </span>,
+                o.date,
+                o.vendor,
+                o.items,
+                inr(o.amount),
                 <StatusChip key="s" label={o.status} tone={o.tone as Tone} />,
               ],
               menu: [
@@ -128,9 +125,16 @@ function Inner() {
             rows={vendors.map((v) => ({
               id: v.id,
               cells: [
-                <span key="n" className="font-bold text-neutral-900">{v.name}</span>,
+                <span key="n" className="font-bold text-neutral-900">
+                  {v.name}
+                </span>,
                 v.city,
-                <span key="r" className="rounded-md bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-primary-700">{v.rating}</span>,
+                <span
+                  key="r"
+                  className="rounded-md bg-primary-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-primary-700"
+                >
+                  {v.rating}
+                </span>,
                 inr(v.spend),
                 v.outstanding > 0 ? <span className="font-bold text-warning-text">{inr(v.outstanding)}</span> : inr(0),
                 <StatusChip key="s" label={v.status} tone={v.tone as Tone} />,
@@ -165,8 +169,12 @@ function Inner() {
             rows={purchaseRequests.map((r) => ({
               id: r.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{r.id}</span>,
-                r.item, r.by, inr(r.amount),
+                <span key="i" className="font-bold text-primary-600">
+                  {r.id}
+                </span>,
+                r.item,
+                r.by,
+                inr(r.amount),
                 <StatusChip key="s" label={r.status} tone={r.tone as Tone} />,
               ],
               menu: [
@@ -194,8 +202,13 @@ function Inner() {
             rows={goodsReceipts.map((g) => ({
               id: g.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{g.id}</span>,
-                g.po, g.vendor, g.date, g.items,
+                <span key="i" className="font-bold text-primary-600">
+                  {g.id}
+                </span>,
+                g.po,
+                g.vendor,
+                g.date,
+                g.items,
                 <StatusChip key="s" label={g.status} tone={g.tone as Tone} />,
               ],
               menu: [

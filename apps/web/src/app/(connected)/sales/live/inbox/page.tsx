@@ -5,4 +5,10 @@ import { InboxScreen } from "@/screens/sales/inbox";
 
 export const metadata: Metadata = { title: "Inbox — Sales — Venture Studio OS" };
 
-export default function Page() { return <Suspense fallback={<SalesFallback />}><InboxScreen /></Suspense>; }
+export default function Page() {
+  return (
+    <Suspense fallback={<SalesFallback />}>
+      <InboxScreen />
+    </Suspense>
+  );
+}

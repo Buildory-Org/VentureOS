@@ -19,6 +19,7 @@ export function internalUserId(headers: IncomingHttpHeaders): string | undefined
   const key = headers[INTERNAL_KEY_HEADER];
   const userId = headers[INTERNAL_USER_HEADER];
   if (typeof key !== "string" || typeof userId !== "string" || !userId) return undefined;
-  const given = Buffer.from(key); const expected = Buffer.from(INTERNAL_KEY);
+  const given = Buffer.from(key);
+  const expected = Buffer.from(INTERNAL_KEY);
   return given.length === expected.length && timingSafeEqual(given, expected) ? userId : undefined;
 }

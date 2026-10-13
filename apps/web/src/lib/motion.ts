@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let linearEasing: boolean | null = null;
 /**
@@ -10,14 +11,21 @@ let linearEasing: boolean | null = null;
  * the Web Animations API. Browsers without `linear()` get a strong ease-out of similar length.
  */
 export function springTiming(bounce: number, perceptual: number): KeyframeAnimationOptions {
-  if (linearEasing === null) { try { linearEasing = CSS.supports("transition-timing-function", "linear(0, 1)"); } catch { linearEasing = false; } }
+  if (linearEasing === null) {
+    try {
+      linearEasing = CSS.supports("transition-timing-function", "linear(0, 1)");
+    } catch {
+      linearEasing = false;
+    }
+  }
   if (!linearEasing) return { duration: Math.round(perceptual * 900), easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
   const zeta = Math.min(0.95, 1 - bounce);
   const omega = (2 * Math.PI) / perceptual;
   const damped = omega * Math.sqrt(1 - zeta * zeta);
-  const at = (t: number) => 1 - Math.exp(-zeta * omega * t) * (Math.cos(damped * t) + ((zeta * omega) / damped) * Math.sin(damped * t));
+  const at = (t: number) =>
+    1 - Math.exp(-zeta * omega * t) * (Math.cos(damped * t) + ((zeta * omega) / damped) * Math.sin(damped * t));
   const total = Math.min(1.4, Math.log(1 / 0.002) / (zeta * omega));
-  const points = Array.from({ length: 61 }, (_, index) => index === 60 ? 1 : +at((total * index) / 60).toFixed(4));
+  const points = Array.from({ length: 61 }, (_, index) => (index === 60 ? 1 : +at((total * index) / 60).toFixed(4)));
   return { duration: Math.round(total * 1000), easing: `linear(${points.join(", ")})` };
 }
 
@@ -29,19 +37,30 @@ export function useExitTransition(onClose: () => void, durationMs: number) {
   const [closing, setClosing] = useState(false);
   const onCloseRef = useRef(onClose);
   const timer = useRef(0);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const close = useCallback(() => {
     if (timer.current) return;
-    if (prefersReducedMotion()) { onCloseRef.current(); return; }
+    if (prefersReducedMotion()) {
+      onCloseRef.current();
+      return;
+    }
     setClosing(true);
     // Reset afterwards so a parent that keeps this mounted can open and close it again.
-    timer.current = window.setTimeout(() => { timer.current = 0; onCloseRef.current(); setClosing(false); }, durationMs);
+    timer.current = window.setTimeout(() => {
+      timer.current = 0;
+      onCloseRef.current();
+      setClosing(false);
+    }, durationMs);
   }, [durationMs]);
   /** Abandons a running exit (e.g. the same panel is reopened before it finished closing). */
   const cancel = useCallback(() => {
     if (!timer.current) return;
-    window.clearTimeout(timer.current); timer.current = 0; setClosing(false);
+    window.clearTimeout(timer.current);
+    timer.current = 0;
+    setClosing(false);
   }, []);
   return { state: closing ? "closing" : "open", close, cancel } as const;
 }
@@ -67,7 +86,12 @@ export function flashById(id: string, root: ParentNode & Node = document) {
   };
   requestAnimationFrame(() => {
     if (tryFlash()) return;
-    const observer = new MutationObserver(() => { if (tryFlash()) { observer.disconnect(); window.clearTimeout(stop); } });
+    const observer = new MutationObserver(() => {
+      if (tryFlash()) {
+        observer.disconnect();
+        window.clearTimeout(stop);
+      }
+    });
     observer.observe(root, { childList: true, subtree: true });
     const stop = window.setTimeout(() => observer.disconnect(), 5000);
   });

@@ -9,8 +9,45 @@ export const SUPPRESS_KEYS_VERSION = 2;
 
 /** Mail providers and big platforms: a suppression or match on these would hit unrelated companies. */
 const SHARED_DOMAINS = new Set([
-  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.in", "yahoo.co.in", "outlook.com", "hotmail.com", "live.com", "msn.com", "icloud.com", "me.com", "rediffmail.com", "proton.me", "protonmail.com", "aol.com", "zoho.com", "gmx.com", "mail.com",
-  "facebook.com", "instagram.com", "linkedin.com", "twitter.com", "x.com", "youtube.com", "google.com", "wa.me", "whatsapp.com", "justdial.com", "indiamart.com", "tradeindia.com", "sulekha.com", "wixsite.com", "wordpress.com", "blogspot.com", "business.site", "godaddysites.com", "weebly.com", "carrd.co", "linktr.ee",
+  "gmail.com",
+  "googlemail.com",
+  "yahoo.com",
+  "yahoo.in",
+  "yahoo.co.in",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "msn.com",
+  "icloud.com",
+  "me.com",
+  "rediffmail.com",
+  "proton.me",
+  "protonmail.com",
+  "aol.com",
+  "zoho.com",
+  "gmx.com",
+  "mail.com",
+  "facebook.com",
+  "instagram.com",
+  "linkedin.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
+  "google.com",
+  "wa.me",
+  "whatsapp.com",
+  "justdial.com",
+  "indiamart.com",
+  "tradeindia.com",
+  "sulekha.com",
+  "wixsite.com",
+  "wordpress.com",
+  "blogspot.com",
+  "business.site",
+  "godaddysites.com",
+  "weebly.com",
+  "carrd.co",
+  "linktr.ee",
 ]);
 
 export function isSharedDomain(domain: string): boolean {
@@ -29,7 +66,13 @@ function asciiDigits(value: string): string {
 
 /** One plain address: lowercase, "mailto:" / display name / query removed, "+tag" dropped from the mailbox, trailing dot dropped from the domain. */
 export function normalizeEmail(value: string): string | null {
-  const email = value.trim().replace(/^mailto:/i, "").replace(/\?.*$/, "").replace(/^.*<([^>]+)>.*$/, "$1").trim().toLowerCase();
+  const email = value
+    .trim()
+    .replace(/^mailto:/i, "")
+    .replace(/\?.*$/, "")
+    .replace(/^.*<([^>]+)>.*$/, "$1")
+    .trim()
+    .toLowerCase();
   const at = email.lastIndexOf("@");
   if (at < 1) return null;
   let local = email.slice(0, at);
@@ -47,14 +90,22 @@ export const MAX_CONTACT_TEXT = 2_000;
 /** Every email address written in a free-text value (a contact page note, a mailto link, "Name <addr>"); nothing in text over 2,000 characters. */
 export function extractEmails(text: string): string[] {
   if (text.length > MAX_CONTACT_TEXT) return [];
-  return [...new Set((text.match(EMAIL_PATTERN) ?? []).map(normalizeEmail).filter((email): email is string => email !== null))];
+  return [
+    ...new Set(
+      (text.match(EMAIL_PATTERN) ?? []).map(normalizeEmail).filter((email): email is string => email !== null),
+    ),
+  ];
 }
 
 /** "+<digits>": 10-digit numbers, 0-prefixed and 91-prefixed Indian numbers all become +91XXXXXXXXXX; extensions are ignored. */
 export function normalizePhone(value: string): string | null {
   const text = asciiDigits(value);
   const wa = /wa\.me\/\+?(\d+)/i.exec(text) ?? /[?&]phone=\+?(\d+)/i.exec(text);
-  const raw = (wa ? wa[1]! : text).trim().replace(/^tel:/i, "").replace(/\b(?:ext|extn|extension|x)\.?\s*\d+.*$/i, "").trim();
+  const raw = (wa ? wa[1]! : text)
+    .trim()
+    .replace(/^tel:/i, "")
+    .replace(/\b(?:ext|extn|extension|x)\.?\s*\d+.*$/i, "")
+    .trim();
   let digits = raw.replace(/\D/g, "");
   if (raw.startsWith("00")) digits = digits.slice(2);
   if (!raw.startsWith("+") && !raw.startsWith("00")) {
@@ -70,7 +121,10 @@ export function extractPhones(text: string): string[] {
   if (text.length > MAX_CONTACT_TEXT) return [];
   const phones = new Set<string>();
   let rest = asciiDigits(text).replace(EMAIL_PATTERN, " ");
-  for (const match of rest.matchAll(/wa\.me\/\+?(\d{8,15})/gi)) { const phone = normalizePhone(`+${match[1]}`); if (phone) phones.add(phone); }
+  for (const match of rest.matchAll(/wa\.me\/\+?(\d{8,15})/gi)) {
+    const phone = normalizePhone(`+${match[1]}`);
+    if (phone) phones.add(phone);
+  }
   rest = rest.replace(/https?:\/\/\S+/gi, " ").replace(/\btel:/gi, " ");
   for (const part of rest.split(/[/,;|\n]|\s(?:or|and)\s/i)) {
     const number = /\+?\d[\d\s().-]{6,}\d/.exec(part.replace(/\b(?:ext|extn|extension|x)\.?\s*\d+.*$/i, ""));
@@ -83,15 +137,44 @@ export function extractPhones(text: string): string[] {
 export function normalizeDomain(value: string): string | null {
   let host = value.trim().toLowerCase();
   if (host.includes("@")) host = host.slice(host.lastIndexOf("@") + 1);
-  host = host.replace(/^[a-z][a-z0-9+.-]*:\/\//, "").replace(/[/?#].*$/, "").replace(/:\d+$/, "").replace(/^www\./, "").replace(/\.+$/, "");
+  host = host
+    .replace(/^[a-z][a-z0-9+.-]*:\/\//, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/:\d+$/, "")
+    .replace(/^www\./, "")
+    .replace(/\.+$/, "");
   return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : null;
 }
 
-const COMPANY_SUFFIXES = new Set(["pvt", "private", "ltd", "limited", "llp", "inc", "incorporated", "llc", "co", "corp", "corporation", "company", "opc", "the"]);
+const COMPANY_SUFFIXES = new Set([
+  "pvt",
+  "private",
+  "ltd",
+  "limited",
+  "llp",
+  "inc",
+  "incorporated",
+  "llc",
+  "co",
+  "corp",
+  "corporation",
+  "company",
+  "opc",
+  "the",
+]);
 
 /** Brackets, "&"/"and", punctuation, case and legal suffixes (Pvt Ltd, LLP, Co ...) are ignored; trade words such as "traders" stay. */
 export function normalizeCompany(value: string): string | null {
-  const words = value.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\([^)]*\)/g, " ").replace(/&/g, " and ").replace(/[^a-z0-9ऀ-ॿ]+/g, " ").trim().split(/\s+/).filter((word) => word && word !== "and");
+  const words = value
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word && word !== "and");
   while (words.length > 1 && COMPANY_SUFFIXES.has(words[words.length - 1]!)) words.pop();
   while (words.length > 1 && COMPANY_SUFFIXES.has(words[0]!)) words.shift();
   const name = words.join(" ");
@@ -99,16 +182,29 @@ export function normalizeCompany(value: string): string | null {
 }
 
 /** A city as people write it, down to its name: "Indore", "indore ", "Indore, MP" and "Indore (M.P.)" are one city. */
-export const cityKey = (value: unknown) => String(value ?? "").toLowerCase().split(/[,(]/)[0]!.replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+export const cityKey = (value: unknown) =>
+  String(value ?? "")
+    .toLowerCase()
+    .split(/[,(]/)[0]!
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 /** Two cities that don't tell two companies of the same name apart: either is not known, or they are the same city. */
-export const sameCity = (a: unknown, b: unknown) => { const left = cityKey(a); const right = cityKey(b); return !left || !right || left === right; };
+export const sameCity = (a: unknown, b: unknown) => {
+  const left = cityKey(a);
+  const right = cityKey(b);
+  return !left || !right || left === right;
+};
 
 export function normalizeValue(kind: SuppressionKind, value: string): string | null {
   switch (kind) {
-    case "email": return normalizeEmail(value);
-    case "phone": return normalizePhone(value);
-    case "domain": return normalizeDomain(value);
-    case "company": return normalizeCompany(value);
+    case "email":
+      return normalizeEmail(value);
+    case "phone":
+      return normalizePhone(value);
+    case "domain":
+      return normalizeDomain(value);
+    case "company":
+      return normalizeCompany(value);
   }
 }
 
@@ -122,11 +218,14 @@ export function leadContacts(lead: LeadLike): { emails: string[]; phones: string
   const emails = new Set<string>();
   const phones = new Set<string>();
   const domains = new Set<string>();
-  const addDomain = (value: string | null) => { if (value && !isSharedDomain(value)) domains.add(value); };
+  const addDomain = (value: string | null) => {
+    if (value && !isSharedDomain(value)) domains.add(value);
+  };
   for (const route of lead.contactRoutes ?? []) {
     if (route.kind === "linkedin") continue;
     if (route.kind === "email") for (const email of extractEmails(route.value)) emails.add(email);
-    else if (route.kind === "phone" || route.kind === "whatsapp") for (const phone of extractPhones(route.value)) phones.add(phone);
+    else if (route.kind === "phone" || route.kind === "whatsapp")
+      for (const phone of extractPhones(route.value)) phones.add(phone);
     else {
       // "other" and website forms can hold anything: a mailto link, a wa.me link, a page address, a number in a sentence.
       for (const email of extractEmails(route.value)) emails.add(email);
@@ -142,7 +241,11 @@ export function leadContacts(lead: LeadLike): { emails: string[]; phones: string
 /** Every key a lead can be matched on: its emails and phones, the company's own domains, and the company name. */
 export function leadSuppressKeys(lead: LeadLike): string[] {
   const { emails, phones, domains } = leadContacts(lead);
-  const keys = new Set<string>([...emails.map((value) => suppressionKey("email", value)), ...phones.map((value) => suppressionKey("phone", value)), ...domains.map((value) => suppressionKey("domain", value))]);
+  const keys = new Set<string>([
+    ...emails.map((value) => suppressionKey("email", value)),
+    ...phones.map((value) => suppressionKey("phone", value)),
+    ...domains.map((value) => suppressionKey("domain", value)),
+  ]);
   const company = lead.companyName ? normalizeCompany(lead.companyName) : null;
   if (company) keys.add(suppressionKey("company", company));
   return [...keys];
@@ -151,7 +254,11 @@ export function leadSuppressKeys(lead: LeadLike): string[] {
 /** The entries an opt-out or hostile reply creates for a lead: its emails and phones, the company's own domains (never a shared mail domain) and the company name. */
 export function optOutEntries(lead: LeadLike): { kind: SuppressionKind; value: string }[] {
   const { emails, phones, domains } = leadContacts(lead);
-  const entries: { kind: SuppressionKind; value: string }[] = [...emails.map((value) => ({ kind: "email" as const, value })), ...phones.map((value) => ({ kind: "phone" as const, value })), ...domains.map((value) => ({ kind: "domain" as const, value }))];
+  const entries: { kind: SuppressionKind; value: string }[] = [
+    ...emails.map((value) => ({ kind: "email" as const, value })),
+    ...phones.map((value) => ({ kind: "phone" as const, value })),
+    ...domains.map((value) => ({ kind: "domain" as const, value })),
+  ];
   const company = lead.companyName ? normalizeCompany(lead.companyName) : null;
   if (company) entries.push({ kind: "company", value: company });
   return entries;

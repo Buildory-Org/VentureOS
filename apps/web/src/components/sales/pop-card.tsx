@@ -10,7 +10,17 @@ import { prefersReducedMotion } from "@/lib/motion";
  * Styles live in app/globals.css under "3D pop cards".
  */
 /** `disabled` switches the effect off (a board turns it off while a card is being dragged, so cards under the pointer stay still). */
-export function PopCard({ children, className, tilt = 7, disabled = false }: { children: ReactNode; className?: string; tilt?: number; disabled?: boolean }) {
+export function PopCard({
+  children,
+  className,
+  tilt = 7,
+  disabled = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  tilt?: number;
+  disabled?: boolean;
+}) {
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState(false);
 
@@ -29,19 +39,64 @@ export function PopCard({ children, className, tilt = 7, disabled = false }: { c
   }
   function leave() {
     const element = wrap.current;
-    if (element) { element.style.setProperty("--pop-rx", "0deg"); element.style.setProperty("--pop-ry", "0deg"); }
+    if (element) {
+      element.style.setProperty("--pop-rx", "0deg");
+      element.style.setProperty("--pop-ry", "0deg");
+    }
     setHover(false);
   }
 
-  return <div ref={wrap} data-hover={(hover && !disabled) || undefined} className="vso-pop-wrap" onPointerEnter={(event) => { if (!disabled && event.pointerType === "mouse") setHover(true); }} onPointerMove={move} onPointerLeave={leave}>
-    <span aria-hidden="true" className="vso-pop-glow" />
-    <div className={clsx("vso-pop", className)}>{children}</div>
-  </div>;
+  return (
+    <div
+      ref={wrap}
+      data-hover={(hover && !disabled) || undefined}
+      className="vso-pop-wrap"
+      onPointerEnter={(event) => {
+        if (!disabled && event.pointerType === "mouse") setHover(true);
+      }}
+      onPointerMove={move}
+      onPointerLeave={leave}
+    >
+      <span aria-hidden="true" className="vso-pop-glow" />
+      <div className={clsx("vso-pop", className)}>{children}</div>
+    </div>
+  );
 }
 
 /** Initials badge that pops out of a PopCard on hover. */
-export function PopAvatar({ name, className, size = "md" }: { name: string; className?: string; size?: "sm" | "md" | "lg" }) {
-  const initials = name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]!.toUpperCase()).join("") || "?";
-  const dims = size === "lg" ? "h-14 w-14 text-lg rounded-2xl" : size === "sm" ? "h-8 w-8 text-[11px] rounded-lg" : "h-11 w-11 text-sm rounded-xl";
-  return <span aria-hidden="true" className={clsx("vso-pop-avatar grid shrink-0 place-items-center font-extrabold tracking-[-.02em] text-white", dims, className)}>{initials}</span>;
+export function PopAvatar({
+  name,
+  className,
+  size = "md",
+}: {
+  name: string;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]!.toUpperCase())
+      .join("") || "?";
+  const dims =
+    size === "lg"
+      ? "h-14 w-14 text-lg rounded-2xl"
+      : size === "sm"
+        ? "h-8 w-8 text-[11px] rounded-lg"
+        : "h-11 w-11 text-sm rounded-xl";
+  return (
+    <span
+      aria-hidden="true"
+      className={clsx(
+        "vso-pop-avatar grid shrink-0 place-items-center font-extrabold tracking-[-.02em] text-white",
+        dims,
+        className,
+      )}
+    >
+      {initials}
+    </span>
+  );
 }

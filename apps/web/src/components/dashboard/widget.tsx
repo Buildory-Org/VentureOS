@@ -31,28 +31,16 @@ export function Widget({
 }) {
   return (
     <section
-      className={clsx(
-        "animate-widget-in flex flex-col rounded-2xl bg-white",
-        className
-      )}
+      className={clsx("animate-widget-in flex flex-col rounded-2xl bg-white", className)}
       style={{ animationDelay: `${delay}ms` }}
     >
       <header className="flex items-center gap-2 px-6 pt-5">
-        <h2
-          className={clsx(
-            "text-[13px] font-semibold text-neutral-800",
-            ai && "text-ai"
-          )}
-        >
-          {title}
-        </h2>
+        <h2 className={clsx("text-[13px] font-semibold text-neutral-800", ai && "text-ai")}>{title}</h2>
         <div className="ml-auto flex items-center gap-1">
           {period && (
             <Dropdown
               align="right"
-              items={["This Week", "This Month", "This Quarter", "This Year"].map(
-                (p) => ({ label: p })
-              )}
+              items={["This Week", "This Month", "This Quarter", "This Year"].map((p) => ({ label: p }))}
               trigger={
                 <button
                   type="button"
@@ -87,9 +75,7 @@ export function Widget({
       <div className="flex flex-1 flex-col px-6 py-3.5">{children}</div>
 
       <footer className="flex items-center justify-between px-6 pb-4">
-        <span className="text-[10.5px] font-medium text-neutral-400 tnum">
-          as of 10:42 am
-        </span>
+        <span className="text-[10.5px] font-medium text-neutral-400 tnum">as of 10:42 am</span>
         {footer && (
           <a
             href={footer.href}

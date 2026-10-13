@@ -23,13 +23,7 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { Drawer, drawerForms } from "@/components/ui/drawer";
 import { ghostBtn, primaryBtn } from "@/components/ui/btn";
 import { inr } from "@/lib/format";
-import {
-  employees,
-  attendance,
-  leaveRequests,
-  payroll,
-  recruitment,
-} from "@/lib/mock-modules";
+import { employees, attendance, leaveRequests, payroll, recruitment } from "@/lib/mock-modules";
 
 const tabs = [
   { key: "employees", label: "Employees", badge: 6 },
@@ -45,10 +39,7 @@ function Inner() {
 
   return (
     <div className="mx-auto max-w-[1600px] p-6">
-      <PageHeader
-        title="HR"
-        subtitle="People, attendance, leave and payroll"
-      >
+      <PageHeader title="HR" subtitle="People, attendance, leave and payroll">
         <Dropdown
           align="right"
           items={[
@@ -88,15 +79,22 @@ function Inner() {
               cells: [
                 <span key="n" className="flex items-center gap-2.5">
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[9.5px] font-bold text-white">
-                    {e.name.split(" ").map((w) => w[0]).join("")}
+                    {e.name
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")}
                   </span>
                   <span>
                     <span className="block font-bold text-neutral-900">{e.name}</span>
                     <span className="block font-mono text-[10px] text-neutral-400">{e.id}</span>
                   </span>
                 </span>,
-                e.role, e.branch, inr(e.salary),
-                <span key="l" className="text-[11.5px] text-neutral-500 tnum">{e.leave}</span>,
+                e.role,
+                e.branch,
+                inr(e.salary),
+                <span key="l" className="text-[11.5px] text-neutral-500 tnum">
+                  {e.leave}
+                </span>,
                 <StatusChip key="s" label={e.status} tone={e.tone as Tone} />,
               ],
               menu: [
@@ -133,9 +131,14 @@ function Inner() {
             rows={attendance.map((a) => ({
               id: a.name,
               cells: [
-                <span key="n" className="font-bold text-neutral-900">{a.name}</span>,
-                <span key="p" className="tnum">{a.present}</span>,
-                a.late, a.ot,
+                <span key="n" className="font-bold text-neutral-900">
+                  {a.name}
+                </span>,
+                <span key="p" className="tnum">
+                  {a.present}
+                </span>,
+                a.late,
+                a.ot,
                 <StatusChip key="s" label={a.status} tone={a.tone as Tone} />,
               ],
               menu: [{ label: "View calendar", icon: CheckmarkCircle01Icon }],
@@ -166,8 +169,14 @@ function Inner() {
             rows={leaveRequests.map((l) => ({
               id: l.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{l.id}</span>,
-                l.name, l.type, l.dates, l.days, l.reason,
+                <span key="i" className="font-bold text-primary-600">
+                  {l.id}
+                </span>,
+                l.name,
+                l.type,
+                l.dates,
+                l.days,
+                l.reason,
                 <StatusChip key="s" label={l.status} tone={l.tone as Tone} />,
               ],
               menu: [
@@ -200,9 +209,15 @@ function Inner() {
             rows={payroll.map((p) => ({
               id: p.name,
               cells: [
-                <span key="n" className="font-bold text-neutral-900">{p.name}</span>,
-                inr(p.gross), inr(p.pf), inr(p.tds),
-                <span key="net" className="font-bold text-neutral-900">{inr(p.net)}</span>,
+                <span key="n" className="font-bold text-neutral-900">
+                  {p.name}
+                </span>,
+                inr(p.gross),
+                inr(p.pf),
+                inr(p.tds),
+                <span key="net" className="font-bold text-neutral-900">
+                  {inr(p.net)}
+                </span>,
                 <StatusChip key="s" label={p.status} tone={p.tone as Tone} />,
               ],
               menu: [
@@ -234,9 +249,14 @@ function Inner() {
             rows={recruitment.map((r) => ({
               id: r.id,
               cells: [
-                <span key="i" className="font-bold text-primary-600">{r.id}</span>,
-                <span key="r" className="font-bold text-neutral-900">{r.role}</span>,
-                r.applicants, r.stage,
+                <span key="i" className="font-bold text-primary-600">
+                  {r.id}
+                </span>,
+                <span key="r" className="font-bold text-neutral-900">
+                  {r.role}
+                </span>,
+                r.applicants,
+                r.stage,
                 <StatusChip key="s" label={r.status} tone={r.tone as Tone} />,
               ],
               menu: [

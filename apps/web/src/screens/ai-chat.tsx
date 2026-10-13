@@ -24,10 +24,7 @@ const canned: Msg = {
 };
 
 export function AiChatScreen() {
-  const [msgs, setMsgs] = useState<Msg[]>([
-    { from: "you", text: "kya cash flow next month safe hai?" },
-    canned,
-  ]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ from: "you", text: "kya cash flow next month safe hai?" }, canned]);
   const [input, setInput] = useState("");
 
   const send = (text: string) => {
@@ -39,10 +36,7 @@ export function AiChatScreen() {
 
   return (
     <div className="mx-auto flex h-full max-w-[900px] flex-col p-6">
-      <PageHeader
-        title="AI Business Advisor"
-        subtitle="Context: Delhi HQ · September 2026 — ask in Hindi or English"
-      />
+      <PageHeader title="AI Business Advisor" subtitle="Context: Delhi HQ · September 2026 — ask in Hindi or English" />
 
       <Anim delay={70} className="mb-4 flex flex-wrap gap-2">
         {aiPrompts.map((p) => (
@@ -77,11 +71,16 @@ export function AiChatScreen() {
                     {m.text}
                     {m.card && (
                       <div className="mt-3 rounded-xl bg-white p-3.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-400">Cash position</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-400">
+                          Cash position
+                        </p>
                         <p className="mt-1.5 text-[12.5px] font-semibold leading-relaxed text-neutral-700 tnum">
                           Cash on hand ₹8.2L · Receivables ₹6.4L · Payables ₹9.1L → projected low ₹5.5L on ~12 Oct
                         </p>
-                        <a href="/finance?tab=cash-flow" className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-bold text-primary-600 hover:text-primary-700">
+                        <a
+                          href="/finance?tab=cash-flow"
+                          className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-bold text-primary-600 hover:text-primary-700"
+                        >
                           View cash flow chart
                           <HugeiconsIcon icon={ArrowUpRight01Icon} size={12} strokeWidth={2} />
                         </a>
@@ -90,7 +89,11 @@ export function AiChatScreen() {
                   </div>
                   <div className="mt-1.5 flex items-center gap-1 pl-1">
                     {[ThumbsUpIcon, ThumbsDownIcon, Copy01Icon].map((ic, j) => (
-                      <button key={j} type="button" className="grid h-6 w-6 place-items-center rounded-md text-neutral-300 transition-colors hover:bg-neutral-100 hover:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">
+                      <button
+                        key={j}
+                        type="button"
+                        className="grid h-6 w-6 place-items-center rounded-md text-neutral-300 transition-colors hover:bg-neutral-100 hover:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                      >
                         <HugeiconsIcon icon={ic} size={13} strokeWidth={1.5} />
                       </button>
                     ))}
@@ -101,7 +104,7 @@ export function AiChatScreen() {
                 </div>
               </div>
             </div>
-          )
+          ),
         )}
       </Anim>
 
@@ -115,7 +118,11 @@ export function AiChatScreen() {
             placeholder="Type or speak 🎤 (Hindi/English)…"
             className="w-full bg-transparent text-[13px] font-medium text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
           />
-          <button type="button" aria-label="Voice input" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600">
+          <button
+            type="button"
+            aria-label="Voice input"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+          >
             <HugeiconsIcon icon={Mic01Icon} size={17} strokeWidth={1.5} />
           </button>
           <button

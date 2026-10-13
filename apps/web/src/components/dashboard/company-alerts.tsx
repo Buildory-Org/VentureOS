@@ -1,16 +1,12 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Alert02Icon,
-  AlertTriangle,
-  AiMagicIcon,
-} from "@hugeicons/core-free-icons";
+import { Alert02Icon, AlertTriangle, AiMagicIcon } from "@hugeicons/core-free-icons";
 import { Widget } from "./widget";
 import { companyAlerts } from "@/lib/mock-data";
 
 const ctaHref: Record<string, string> = {
-  "Prepare": "/finance?tab=tax",
+  Prepare: "/finance?tab=tax",
   "View stock": "/inventory?tab=alerts",
-  "Review": "/finance?tab=expenses",
+  Review: "/finance?tab=expenses",
 };
 
 const sev = {
@@ -35,13 +31,7 @@ const sev = {
 } as const;
 
 /** Widget ⑮ — Company alerts strip. */
-export function CompanyAlerts({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function CompanyAlerts({ delay = 0, className }: { delay?: number; className?: string }) {
   return (
     <Widget
       title="Company Alerts"
@@ -53,14 +43,9 @@ export function CompanyAlerts({
         {companyAlerts.map((a) => {
           const s = sev[a.sev];
           return (
-            <li
-              key={a.text}
-              className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${s.row}`}
-            >
+            <li key={a.text} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 ${s.row}`}>
               <HugeiconsIcon icon={s.icon} size={15} strokeWidth={1.75} className={s.iconCls} />
-              <p className="flex-1 text-[12px] font-semibold leading-4.5 text-neutral-700">
-                {a.text}
-              </p>
+              <p className="flex-1 text-[12px] font-semibold leading-4.5 text-neutral-700">{a.text}</p>
               <a
                 href={ctaHref[a.cta]}
                 className={`rounded-full bg-white/80 px-2.5 py-1 text-[10.5px] font-bold transition-[background-color,transform] duration-150 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.96] ${s.chip.split(" ")[1]}`}

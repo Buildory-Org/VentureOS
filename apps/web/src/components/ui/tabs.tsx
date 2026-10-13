@@ -21,21 +21,22 @@ function TabsInner({
   const active = tabs.some((tab) => tab.key === requested) ? requested! : tabs[0].key;
 
   return (
-    <SlidingTabs tabs={tabs} active={active} label={`${param} sections`} className="bg-neutral-100"
+    <SlidingTabs
+      tabs={tabs}
+      active={active}
+      label={`${param} sections`}
+      className="bg-neutral-100"
       onChange={(key) => {
         onChange?.(key);
         const q = new URLSearchParams(sp.toString());
         q.set(param, key);
         router.replace(`?${q.toString()}`, { scroll: false });
-      }} />
+      }}
+    />
   );
 }
 
-export function Tabs(props: {
-  tabs: TabDef[];
-  param?: string;
-  onChange?: (key: string) => void;
-}) {
+export function Tabs(props: { tabs: TabDef[]; param?: string; onChange?: (key: string) => void }) {
   return (
     <Suspense>
       <TabsInner {...props} />

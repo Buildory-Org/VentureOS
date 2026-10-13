@@ -1,13 +1,23 @@
 type Issue = { code?: string; path?: readonly PropertyKey[] | string; message?: string; minimum?: number | bigint };
 
-const fieldLabels: Record<string, string> = { contentType: "File type", q: "Search", ventureId: "Venture", groupId: "Group", markdown: "Content", responseMarkdown: "Answer" };
+const fieldLabels: Record<string, string> = {
+  contentType: "File type",
+  q: "Search",
+  ventureId: "Venture",
+  groupId: "Group",
+  markdown: "Content",
+  responseMarkdown: "Answer",
+};
 
 function fieldLabel(path: Issue["path"]): string {
   const parts = typeof path === "string" ? path.split(".") : [...(path ?? [])];
   const field = parts.filter((part): part is string => typeof part === "string" && part.length > 0).at(-1);
   if (!field) return "This value";
   if (fieldLabels[field]) return fieldLabels[field];
-  const words = field.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").toLowerCase();
+  const words = field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
@@ -15,12 +25,18 @@ function issueText(issue: Issue): string {
   const field = fieldLabel(issue.path);
   if (field === "File type") return "This file type is not supported.";
   switch (issue.code) {
-    case "too_small": return Number(issue.minimum ?? 1) <= 1 ? `${field} is required.` : `${field} is too short.`;
-    case "too_big": return `${field} is too long.`;
-    case "invalid_value": return `${field} has an unsupported value.`;
-    case "invalid_format": return `${field} is not in a valid format.`;
-    case "custom": return issue.message?.trim() ? `${issue.message.trim().replace(/\.$/, "")}.` : `${field} is not valid.`;
-    default: return `${field} is not valid.`;
+    case "too_small":
+      return Number(issue.minimum ?? 1) <= 1 ? `${field} is required.` : `${field} is too short.`;
+    case "too_big":
+      return `${field} is too long.`;
+    case "invalid_value":
+      return `${field} has an unsupported value.`;
+    case "invalid_format":
+      return `${field} is not in a valid format.`;
+    case "custom":
+      return issue.message?.trim() ? `${issue.message.trim().replace(/\.$/, "")}.` : `${field} is not valid.`;
+    default:
+      return `${field} is not valid.`;
   }
 }
 
@@ -41,7 +57,9 @@ export function describeError(cause: unknown, fallback = "Something went wrong. 
       try {
         const issues = JSON.parse(message) as Issue[];
         if (Array.isArray(issues) && issues.length) return issueText(issues[0]);
-      } catch { /* Not serialized validation issues; fall through to the message. */ }
+      } catch {
+        /* Not serialized validation issues; fall through to the message. */
+      }
     }
     return message || fallback;
   }

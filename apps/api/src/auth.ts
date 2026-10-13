@@ -9,7 +9,15 @@ import { renderInviteEmail, renderSignInEmail, type InviteEmailInput, type Rende
 export const MAGIC_LINK_MINUTES = 5;
 
 /** Resend payload for a rendered email: HTML and plain-text parts plus the inline (cid:) artwork. */
-const resendBody = (config: AppConfig, to: string, email: RenderedEmail) => JSON.stringify({ from: config.EMAIL_FROM, to, subject: email.subject, html: email.html, text: email.text, attachments: email.attachments });
+const resendBody = (config: AppConfig, to: string, email: RenderedEmail) =>
+  JSON.stringify({
+    from: config.EMAIL_FROM,
+    to,
+    subject: email.subject,
+    html: email.html,
+    text: email.text,
+    attachments: email.attachments,
+  });
 
 async function sendMagicLink(config: AppConfig, email: string, url: string): Promise<void> {
   if (!config.RESEND_API_KEY) {
@@ -24,17 +32,27 @@ async function sendMagicLink(config: AppConfig, email: string, url: string): Pro
   if (!response.ok) throw new Error(`Resend rejected magic link: ${response.status}`);
 }
 
-export async function sendInvitationEmail(config: AppConfig, email: string, invitationId: string, details: InviteEmailInput): Promise<string> {
+export async function sendInvitationEmail(
+  config: AppConfig,
+  email: string,
+  invitationId: string,
+  details: InviteEmailInput,
+): Promise<string> {
   if (!config.RESEND_API_KEY) throw new Error("Resend is not configured");
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${config.RESEND_API_KEY}`, "Content-Type": "application/json", "Idempotency-Key": `invitation/${invitationId}` },
+    headers: {
+      Authorization: `Bearer ${config.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `invitation/${invitationId}`,
+    },
     body: resendBody(config, email, renderInviteEmail(details)),
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`Resend rejected invitation: ${response.status}`);
   const result: unknown = await response.json();
-  if (!result || typeof result !== "object" || !("id" in result) || typeof result.id !== "string") throw new Error("Resend did not confirm an email ID");
+  if (!result || typeof result !== "object" || !("id" in result) || typeof result.id !== "string")
+    throw new Error("Resend did not confirm an email ID");
   return result.id;
 }
 
@@ -48,7 +66,12 @@ export function createAuth(db: Db, config: AppConfig) {
     // Sign-in rate limits use the edge's client-address header when one is configured (see CLIENT_IP_HEADER).
     ...(config.CLIENT_IP_HEADER ? { advanced: { ipAddress: { ipAddressHeaders: [config.CLIENT_IP_HEADER] } } } : {}),
     database: mongodbAdapter(db),
-    plugins: [magicLink({ expiresIn: MAGIC_LINK_MINUTES * 60, sendMagicLink: ({ email, url }) => sendMagicLink(config, email, url) })],
+    plugins: [
+      magicLink({
+        expiresIn: MAGIC_LINK_MINUTES * 60,
+        sendMagicLink: ({ email, url }) => sendMagicLink(config, email, url),
+      }),
+    ],
   });
 }
 

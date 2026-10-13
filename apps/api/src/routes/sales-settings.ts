@@ -19,8 +19,14 @@ export function salesSettingsRoutes(database: Database): Router {
   const router = Router();
   const view = async (workspaceId: string, ventureId: string) => {
     const settings = await loadSettings(db, workspaceId, ventureId);
-    const stored = await db.collection("sales_settings").findOne({ _id: ventureId, workspaceId }, { projection: { updatedAt: 1, updatedBy: 1 } });
-    return jsonValue({ ventureId, ...settings, ...(stored?.updatedAt ? { updatedAt: stored.updatedAt, updatedBy: stored.updatedBy } : {}) });
+    const stored = await db
+      .collection("sales_settings")
+      .findOne({ _id: ventureId, workspaceId }, { projection: { updatedAt: 1, updatedBy: 1 } });
+    return jsonValue({
+      ventureId,
+      ...settings,
+      ...(stored?.updatedAt ? { updatedAt: stored.updatedAt, updatedBy: stored.updatedBy } : {}),
+    });
   };
 
   router.get("/settings", async (req, res) => {
@@ -33,17 +39,35 @@ export function salesSettingsRoutes(database: Database): Router {
   // Replaces the venture's settings: whatever the body leaves out takes its default.
   router.put("/settings", async (req, res) => {
     const ctx = salesCtx(database, req);
-    const { ventureId } = querySchema.parse({ ventureId: req.query.ventureId ?? (req.body as { ventureId?: unknown } | undefined)?.ventureId });
+    const { ventureId } = querySchema.parse({
+      ventureId: req.query.ventureId ?? (req.body as { ventureId?: unknown } | undefined)?.ventureId,
+    });
     await loadVenture(db, ctx.actor, ventureId);
     forbidClaude(ctx.via, "Changing a venture's sales settings");
     requireHead(ctx.actor, ventureId, "change the sales settings");
     const input = salesSettingsSchema.parse(req.body ?? {});
     const before = await loadSettings(db, ctx.workspaceId, ventureId);
-    const changed = (Object.keys(input) as (keyof typeof input)[]).filter((key) => JSON.stringify(input[key]) !== JSON.stringify(before[key]));
+    const changed = (Object.keys(input) as (keyof typeof input)[]).filter(
+      (key) => JSON.stringify(input[key]) !== JSON.stringify(before[key]),
+    );
     const now = new Date();
     await atomic(database, async (session) => {
-      await db.collection("sales_settings").updateOne({ _id: ventureId, workspaceId: ctx.workspaceId }, { $set: { ...input, updatedAt: now, updatedBy: ctx.actor.id }, $setOnInsert: { createdAt: now } }, { upsert: true, session });
-      await auditSales(ctx, "sales.settings.update", "sales_settings", ventureId, ventureId, { changed: changed.join(",") || "none", approvalMode: input.approvalMode }, session);
+      await db
+        .collection("sales_settings")
+        .updateOne(
+          { _id: ventureId, workspaceId: ctx.workspaceId },
+          { $set: { ...input, updatedAt: now, updatedBy: ctx.actor.id }, $setOnInsert: { createdAt: now } },
+          { upsert: true, session },
+        );
+      await auditSales(
+        ctx,
+        "sales.settings.update",
+        "sales_settings",
+        ventureId,
+        ventureId,
+        { changed: changed.join(",") || "none", approvalMode: input.approvalMode },
+        session,
+      );
     });
     res.json(ok(await view(ctx.workspaceId, ventureId)));
   });

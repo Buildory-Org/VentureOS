@@ -37,9 +37,7 @@ export function DataTable({
   const [chip, setChip] = useState("All");
   const [sel, setSel] = useState<Set<string>>(new Set());
 
-  const filtered = rows.filter((r) =>
-    q ? JSON.stringify(r.cells).toLowerCase().includes(q.toLowerCase()) : true
-  );
+  const filtered = rows.filter((r) => (q ? JSON.stringify(r.cells).toLowerCase().includes(q.toLowerCase()) : true));
 
   const toggle = (id: string) =>
     setSel((s) => {
@@ -57,12 +55,7 @@ export function DataTable({
       {/* filter bar */}
       <div className="flex items-center gap-2.5 px-4 py-3">
         <div className="flex h-9 min-w-0 max-w-64 flex-1 items-center gap-2 rounded-full bg-neutral-100 px-3.5 transition-[background-color] duration-150 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-600/25">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            size={15}
-            strokeWidth={1.5}
-            className="shrink-0 text-neutral-400"
-          />
+          <HugeiconsIcon icon={Search01Icon} size={15} strokeWidth={1.5} className="shrink-0 text-neutral-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -80,9 +73,7 @@ export function DataTable({
                 "whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-bold",
                 "transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.96]",
-                chip === c
-                  ? "bg-primary-700 text-white"
-                  : "bg-neutral-100 text-neutral-500 hover:text-neutral-800"
+                chip === c ? "bg-primary-700 text-white" : "bg-neutral-100 text-neutral-500 hover:text-neutral-800",
               )}
             >
               {c}
@@ -101,13 +92,7 @@ export function DataTable({
                   type="checkbox"
                   aria-label="Select all"
                   checked={sel.size === filtered.length && filtered.length > 0}
-                  onChange={() =>
-                    setSel(
-                      sel.size === filtered.length
-                        ? new Set()
-                        : new Set(filtered.map((r) => r.id))
-                    )
-                  }
+                  onChange={() => setSel(sel.size === filtered.length ? new Set() : new Set(filtered.map((r) => r.id)))}
                   className="h-3.5 w-3.5 rounded accent-primary-600"
                 />
               </th>
@@ -117,7 +102,7 @@ export function DataTable({
                   style={c.w ? { width: c.w } : undefined}
                   className={clsx(
                     "px-3 py-2.5 text-[10.5px] font-bold uppercase tracking-[0.07em] text-neutral-400",
-                    c.align === "right" && "text-right"
+                    c.align === "right" && "text-right",
                   )}
                 >
                   {c.label}
@@ -132,7 +117,7 @@ export function DataTable({
                 key={r.id}
                 className={clsx(
                   "group cursor-pointer transition-colors duration-100 hover:bg-neutral-50",
-                  sel.has(r.id) && "bg-primary-50/50"
+                  sel.has(r.id) && "bg-primary-50/50",
                 )}
               >
                 <td className="px-4 py-3">
@@ -150,7 +135,7 @@ export function DataTable({
                     className={clsx(
                       "px-3 py-3 text-[12.5px] font-medium text-neutral-700",
                       cols[i].align === "right" && "text-right tnum",
-                      cols[i].mono && "font-mono text-[12px]"
+                      cols[i].mono && "font-mono text-[12px]",
                     )}
                   >
                     {cell}
@@ -163,11 +148,7 @@ export function DataTable({
                       items={r.menu}
                       trigger={
                         <span className="inline-grid h-7 w-7 place-items-center rounded-full text-neutral-300 transition-[color,background-color] duration-100 hover:bg-neutral-100 hover:text-neutral-600 group-hover:text-neutral-500">
-                          <HugeiconsIcon
-                            icon={MoreHorizontalIcon}
-                            size={16}
-                            strokeWidth={1.75}
-                          />
+                          <HugeiconsIcon icon={MoreHorizontalIcon} size={16} strokeWidth={1.75} />
                         </span>
                       }
                     />

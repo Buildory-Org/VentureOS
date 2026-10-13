@@ -18,10 +18,13 @@
     "dev:web": "npm run dev --workspace @venture-studio/web",
     "build:web": "npm run build --workspace @venture-studio/web",
     "lint:web": "npm run lint --workspace @venture-studio/web",
-    "smoke:web": "npm run lint:web && npm run build:web"
+    "smoke:web": "npm run lint:web && npm run build:web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@types/node": "^20.17.0",
+    "prettier": "3.6.2",
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
   },

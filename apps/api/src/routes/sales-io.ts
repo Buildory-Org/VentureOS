@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { bulkLeadsInputSchema, idSchema, importCommitInputSchema, importInputSchema, leadListQuerySchema, savedViewInputSchema } from "@venture-studio/contracts";
+import {
+  bulkLeadsInputSchema,
+  idSchema,
+  importCommitInputSchema,
+  importInputSchema,
+  leadListQuerySchema,
+  savedViewInputSchema,
+} from "@venture-studio/contracts";
 import type { Database } from "../db.js";
 import { salesCtx } from "../sales/ctx.js";
 import { bulkLeads, commitImport, deleteView, exportLeads, listViews, previewImport, saveView } from "../sales/io.js";
@@ -28,10 +35,17 @@ export function salesIoRoutes(database: Database): Router {
   router.get("/leads/export.csv", async (req, res) => {
     const result = await exportLeads(salesCtx(database, req), exportQuerySchema.parse(req.query));
     const day = new Intl.DateTimeFormat("en-CA", { timeZone: SALES_TZ }).format(new Date());
-    res.status(200).set({
-      "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="leads-${day}.csv"`, "Cache-Control": "no-store",
-      "X-Exported-Rows": String(result.rows), "X-Matching-Rows": String(result.matching), "Access-Control-Expose-Headers": "X-Exported-Rows, X-Matching-Rows, Content-Disposition",
-    }).send(result.csv);
+    res
+      .status(200)
+      .set({
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="leads-${day}.csv"`,
+        "Cache-Control": "no-store",
+        "X-Exported-Rows": String(result.rows),
+        "X-Matching-Rows": String(result.matching),
+        "Access-Control-Expose-Headers": "X-Exported-Rows, X-Matching-Rows, Content-Disposition",
+      })
+      .send(result.csv);
   });
 
   router.post("/leads/import/preview", async (req, res) => {

@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { useState } from "react";
 import clsx from "clsx";
 import { Widget } from "./widget";
@@ -19,12 +10,7 @@ const ranges = ["Inflow", "Outflow", "Net"] as const;
 const HILITE = 4; // Aug — highlighted bar
 
 /** Floating callout card over the highlighted bar — Fundora style. */
-function CalloutLabel(props: {
-  x?: number | string;
-  y?: number | string;
-  width?: number | string;
-  index?: number;
-}) {
+function CalloutLabel(props: { x?: number | string; y?: number | string; width?: number | string; index?: number }) {
   const { x, y, width, index } = props;
   if (index !== HILITE || x == null || y == null) return null;
   const cx = Number(x) + Number(width ?? 0) / 2;
@@ -37,10 +23,21 @@ function CalloutLabel(props: {
       {/* connector dot on bar top */}
       <circle cx={cx} cy={Number(y) - 5} r={4} fill="#fff" stroke="var(--color-primary-500)" strokeWidth={3} />
       <rect x={left} y={top} width={W} height={H} rx={10} fill="#fff" stroke="var(--color-neutral-200)" />
-      <text x={cx} y={top + 15} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 600, fill: "var(--color-neutral-400)" }}>
+      <text
+        x={cx}
+        y={top + 15}
+        textAnchor="middle"
+        style={{ fontSize: 9.5, fontWeight: 600, fill: "var(--color-neutral-400)" }}
+      >
         Aug 2025
       </text>
-      <text x={cx} y={top + 30} textAnchor="middle" className="tnum" style={{ fontSize: 13, fontWeight: 800, fill: "var(--color-neutral-900)" }}>
+      <text
+        x={cx}
+        y={top + 30}
+        textAnchor="middle"
+        className="tnum"
+        style={{ fontSize: 13, fontWeight: 800, fill: "var(--color-neutral-900)" }}
+      >
         ₹38.9L
       </text>
     </g>
@@ -48,13 +45,7 @@ function CalloutLabel(props: {
 }
 
 /** Widget ④ — Cash Flow: rounded bars, highlighted month + callout. */
-export function CashFlow({
-  delay = 0,
-  className,
-}: {
-  delay?: number;
-  className?: string;
-}) {
+export function CashFlow({ delay = 0, className }: { delay?: number; className?: string }) {
   const [range, setRange] = useState<(typeof ranges)[number]>("Inflow");
 
   return (
@@ -66,9 +57,7 @@ export function CashFlow({
       className={className}
     >
       <div className="mb-1 flex items-end justify-between">
-        <p className="text-[26px] font-extrabold tracking-tight text-neutral-900 tnum">
-          ₹34.2L
-        </p>
+        <p className="text-[26px] font-extrabold tracking-tight text-neutral-900 tnum">₹34.2L</p>
         {/* segmented — dark pill active, Fundora style */}
         <div className="flex items-center gap-1">
           {ranges.map((r) => (
@@ -80,9 +69,7 @@ export function CashFlow({
                 "rounded-full px-3.5 py-1.5 text-[11.5px] font-bold",
                 "transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 active:scale-[0.96]",
-                range === r
-                  ? "bg-primary-700 text-white"
-                  : "text-neutral-400 hover:text-neutral-700"
+                range === r ? "bg-primary-700 text-white" : "text-neutral-400 hover:text-neutral-700",
               )}
             >
               {r}

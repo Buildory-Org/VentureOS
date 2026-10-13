@@ -40,7 +40,9 @@ export const celebrationFeedSchema = z.object({
 });
 
 /** Pause for 1, 3, or 24 hours; 0 resumes now. */
-export const celebrationPauseSchema = z.object({ hours: z.union([z.literal(0), z.literal(1), z.literal(3), z.literal(24)]) });
+export const celebrationPauseSchema = z.object({
+  hours: z.union([z.literal(0), z.literal(1), z.literal(3), z.literal(24)]),
+});
 export const celebrationPauseResultSchema = z.object({ pausedUntil: isoDateSchema.nullable() });
 export const celebrationSeenSchema = z.object({ ids: z.array(idSchema).min(1).max(20) });
 

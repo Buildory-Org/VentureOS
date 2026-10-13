@@ -37,7 +37,7 @@ export function useKanbanDnd<Status extends string>(onMove: (taskId: string, sta
       },
       onDragLeave: (event: DragEvent<HTMLElement>) => {
         if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
-        setOverStatus((current) => current === status ? null : current);
+        setOverStatus((current) => (current === status ? null : current));
       },
       onDrop: (event: DragEvent<HTMLElement>) => {
         if (!draggedId.current) return;

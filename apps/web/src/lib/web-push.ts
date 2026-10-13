@@ -17,7 +17,8 @@ function publicKeyBytes(key: string) {
 
 export async function existingPushRegistration() {
   const registration = await navigator.serviceWorker.getRegistration("/");
-  const script = registration?.active?.scriptURL ?? registration?.waiting?.scriptURL ?? registration?.installing?.scriptURL;
+  const script =
+    registration?.active?.scriptURL ?? registration?.waiting?.scriptURL ?? registration?.installing?.scriptURL;
   return script && new URL(script).pathname === WORKER_PATH ? registration : null;
 }
 
@@ -27,11 +28,16 @@ export async function turnOnPush(publicKey: string): Promise<void> {
   try {
     const other = await navigator.serviceWorker.getRegistration("/");
     const otherScript = other?.active?.scriptURL ?? other?.waiting?.scriptURL ?? other?.installing?.scriptURL;
-    if (otherScript && new URL(otherScript).pathname !== WORKER_PATH) throw new Error("This browser session is using a different notification service. Notifications were not turned on.");
+    if (otherScript && new URL(otherScript).pathname !== WORKER_PATH)
+      throw new Error(
+        "This browser session is using a different notification service. Notifications were not turned on.",
+      );
     await navigator.serviceWorker.register(WORKER_PATH, { scope: "/" });
     const ready = await navigator.serviceWorker.ready;
     const current = await ready.pushManager.getSubscription();
-    const subscription = current ?? await ready.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: publicKeyBytes(publicKey) });
+    const subscription =
+      current ??
+      (await ready.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: publicKeyBytes(publicKey) }));
     if (!current) newlyCreated = subscription;
     await registerLivePushSubscription(subscription);
   } catch (cause) {

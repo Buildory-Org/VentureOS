@@ -6,11 +6,28 @@ import { normalizeStage } from "./rules.js";
 import { FOLLOW_UP_WORKING_DAYS } from "./rules.js";
 import { workingDaysBetween, type WorkCalendar } from "./workdays.js";
 
-const INTERNAL_FIELDS = new Set(["deletedAt", "deletedBy", "suppressKeys", "suppressKeysV", "disqualifiedByVerdict", "approvedForContactBy", "payloadHash", "importUpdatedAt", "claimedBy", "key", "rawValue", "keyV"]);
+const INTERNAL_FIELDS = new Set([
+  "deletedAt",
+  "deletedBy",
+  "suppressKeys",
+  "suppressKeysV",
+  "disqualifiedByVerdict",
+  "approvedForContactBy",
+  "payloadHash",
+  "importUpdatedAt",
+  "claimedBy",
+  "key",
+  "rawValue",
+  "keyV",
+]);
 
 /** A stored row as API JSON. Fields the driver wrote as null (it turns undefined into null) read as absent. */
 export function present(doc: AppDocument): Record<string, unknown> {
-  return jsonValue(Object.fromEntries(Object.entries(doc).filter(([key, value]) => value !== null && value !== undefined && !INTERNAL_FIELDS.has(key)))) as Record<string, unknown>;
+  return jsonValue(
+    Object.fromEntries(
+      Object.entries(doc).filter(([key, value]) => value !== null && value !== undefined && !INTERNAL_FIELDS.has(key)),
+    ),
+  ) as Record<string, unknown>;
 }
 
 export function leadJson(lead: AppDocument): Record<string, unknown> {
@@ -20,15 +37,39 @@ export function leadJson(lead: AppDocument): Record<string, unknown> {
 /** The small lead summary shown beside drafts and inbox items, with the offer it is pursued for. */
 export function leadSummary(lead: AppDocument) {
   return present({
-    _id: lead._id, ventureId: lead.ventureId, offerId: lead.offerId, companyName: lead.companyName ?? "", contactName: lead.contactName ?? "", city: lead.city, stage: normalizeStage(lead.stage), ownerId: lead.ownerId,
-    contactRoutes: lead.contactRoutes ?? [], observedSignal: lead.observedSignal ?? "", verdict: lead.verdict, whatsappOptIn: lead.whatsappOptIn, doNotContact: lead.doNotContact === true,
+    _id: lead._id,
+    ventureId: lead.ventureId,
+    offerId: lead.offerId,
+    companyName: lead.companyName ?? "",
+    contactName: lead.contactName ?? "",
+    city: lead.city,
+    stage: normalizeStage(lead.stage),
+    ownerId: lead.ownerId,
+    contactRoutes: lead.contactRoutes ?? [],
+    observedSignal: lead.observedSignal ?? "",
+    verdict: lead.verdict,
+    whatsappOptIn: lead.whatsappOptIn,
+    doNotContact: lead.doNotContact === true,
   });
 }
 
 export function leadCard(lead: AppDocument, why: string) {
   return present({
-    _id: lead._id, ventureId: lead.ventureId, offerId: lead.offerId, companyName: lead.companyName ?? "", contactName: lead.contactName ?? "", city: lead.city, stage: normalizeStage(lead.stage), ownerId: lead.ownerId,
-    nextAction: lead.nextAction ?? "", nextActionAt: lead.nextActionAt, verdict: lead.verdict, whatsappOptIn: lead.whatsappOptIn, contactRoutes: lead.contactRoutes ?? [], doNotContact: lead.doNotContact === true, why,
+    _id: lead._id,
+    ventureId: lead.ventureId,
+    offerId: lead.offerId,
+    companyName: lead.companyName ?? "",
+    contactName: lead.contactName ?? "",
+    city: lead.city,
+    stage: normalizeStage(lead.stage),
+    ownerId: lead.ownerId,
+    nextAction: lead.nextAction ?? "",
+    nextActionAt: lead.nextActionAt,
+    verdict: lead.verdict,
+    whatsappOptIn: lead.whatsappOptIn,
+    contactRoutes: lead.contactRoutes ?? [],
+    doNotContact: lead.doNotContact === true,
+    why,
   });
 }
 
@@ -41,7 +82,14 @@ export function ago(then: Date, now: Date): string {
   return `${Math.round(hours / 24)} days ago`;
 }
 
-const CHANNEL_LABEL: Record<string, string> = { email: "email", whatsapp: "WhatsApp", linkedin: "LinkedIn", call: "a call", meeting: "a meeting", note: "a note" };
+const CHANNEL_LABEL: Record<string, string> = {
+  email: "email",
+  whatsapp: "WhatsApp",
+  linkedin: "LinkedIn",
+  call: "a call",
+  meeting: "a meeting",
+  note: "a note",
+};
 
 export type WhyContext =
   | { kind: "reply"; activity: AppDocument; now: Date }
@@ -66,13 +114,19 @@ export function whyFor(lead: AppDocument, context: WhyContext): string {
     }
     case "followUp": {
       const from = lead.lastTouchAt ? new Date(lead.lastTouchAt) : undefined;
-      const day = from ? workingDaysBetween(from, context.now, context.calendar) : (context.followUpDays ?? FOLLOW_UP_WORKING_DAYS) + (lead.followUpDueAt ? workingDaysBetween(new Date(lead.followUpDueAt), context.now, context.calendar) : 0);
+      const day = from
+        ? workingDaysBetween(from, context.now, context.calendar)
+        : (context.followUpDays ?? FOLLOW_UP_WORKING_DAYS) +
+          (lead.followUpDueAt ? workingDaysBetween(new Date(lead.followUpDueAt), context.now, context.calendar) : 0);
       return `Follow-up due (day ${Math.max(day, 1)})`;
     }
     case "needsYou": {
       const verdict = lead.verdict as { decision?: string; confidence?: string } | undefined;
-      return verdict?.decision ? `Claude: ${verdict.decision}, ${verdict.confidence ?? "unknown"} confidence` : "Needs your decision";
+      return verdict?.decision
+        ? `Claude: ${verdict.decision}, ${verdict.confidence ?? "unknown"} confidence`
+        : "Needs your decision";
     }
-    case "won": return "Won: create delivery work";
+    case "won":
+      return "Won: create delivery work";
   }
 }

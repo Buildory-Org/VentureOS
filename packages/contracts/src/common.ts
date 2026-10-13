@@ -1,20 +1,35 @@
 import { z } from "zod";
 
-export const idSchema = z.string().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/, "Invalid opaque ID");
+export const idSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/, "Invalid opaque ID");
 export const isoDateSchema = z.iso.datetime({ offset: true });
-export const timezoneSchema = z.string().min(1).max(100).refine((value) => {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: value });
-    return true;
-  } catch {
-    return false;
-  }
-}, "Invalid IANA timezone");
+export const timezoneSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .refine((value) => {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: value });
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Invalid IANA timezone");
 
 export const appRoleSchema = z.enum(["admin", "venture_head", "contributor", "reviewer", "learner"]);
 export const errorCodeSchema = z.enum([
-  "BAD_REQUEST", "UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND", "CONFLICT",
-  "RATE_LIMITED", "STALE_PREVIEW", "INTERNAL_ERROR", "INTEGRATION_UNAVAILABLE",
+  "BAD_REQUEST",
+  "UNAUTHENTICATED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "CONFLICT",
+  "RATE_LIMITED",
+  "STALE_PREVIEW",
+  "INTERNAL_ERROR",
+  "INTEGRATION_UNAVAILABLE",
 ]);
 
 export const errorEnvelopeSchema = z.object({
@@ -28,7 +43,8 @@ export const errorEnvelopeSchema = z.object({
 });
 
 export const successEnvelope = <T extends z.ZodType>(data: T) => z.object({ ok: z.literal(true), data });
-export const pagedDataSchema = <T extends z.ZodType>(item: T) => z.object({ items: z.array(item), nextCursor: idSchema.optional() });
+export const pagedDataSchema = <T extends z.ZodType>(item: T) =>
+  z.object({ items: z.array(item), nextCursor: idSchema.optional() });
 export const pagedSuccessEnvelope = <T extends z.ZodType>(item: T) => successEnvelope(pagedDataSchema(item));
 
 export const cursorQuerySchema = z.object({

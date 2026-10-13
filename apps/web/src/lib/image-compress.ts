@@ -23,13 +23,19 @@ async function animated(file: File): Promise<boolean> {
 }
 
 async function decode(file: File): Promise<ImageBitmap | null> {
-  try { return await createImageBitmap(file, { imageOrientation: "from-image" }); }
-  catch {
-    try { return await createImageBitmap(file); } catch { return null; }
+  try {
+    return await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    try {
+      return await createImageBitmap(file);
+    } catch {
+      return null;
+    }
   }
 }
 
-const encode = (canvas: HTMLCanvasElement, type: string) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, QUALITY));
+const encode = (canvas: HTMLCanvasElement, type: string) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, QUALITY));
 const renamed = (name: string, extension: string) => `${name.replace(/\.[^./\\]+$/, "") || "image"}.${extension}`;
 
 /**
@@ -42,14 +48,25 @@ export async function prepareUpload(file: File, { hd }: { hd: boolean }): Promis
   const bitmap = await decode(file);
   if (!bitmap) return { file };
   const { width, height } = bitmap;
-  const original: PreparedUpload = { file, width, height, ...(hd && isCompressibleImage(file.type) ? { hd: true as const } : {}) };
+  const original: PreparedUpload = {
+    file,
+    width,
+    height,
+    ...(hd && isCompressibleImage(file.type) ? { hd: true as const } : {}),
+  };
   const scale = Math.min(1, LONG_SIDE / Math.max(width, height), SHORT_SIDE / Math.min(width, height));
-  if (hd || !isCompressibleImage(file.type) || (scale === 1 && file.size <= SMALL_ENOUGH) || await animated(file)) { bitmap.close(); return original; }
+  if (hd || !isCompressibleImage(file.type) || (scale === 1 && file.size <= SMALL_ENOUGH) || (await animated(file))) {
+    bitmap.close();
+    return original;
+  }
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
   const context = canvas.getContext("2d");
-  if (!context) { bitmap.close(); return original; }
+  if (!context) {
+    bitmap.close();
+    return original;
+  }
   context.imageSmoothingQuality = "high";
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
@@ -61,5 +78,12 @@ export async function prepareUpload(file: File, { hd }: { hd: boolean }): Promis
   }
   if (!blob || blob.size >= file.size * 0.9) return original;
   const type = blob.type === "image/webp" ? "image/webp" : "image/jpeg";
-  return { file: new File([blob], renamed(file.name, type === "image/webp" ? "webp" : "jpg"), { type, lastModified: file.lastModified }), width: canvas.width, height: canvas.height };
+  return {
+    file: new File([blob], renamed(file.name, type === "image/webp" ? "webp" : "jpg"), {
+      type,
+      lastModified: file.lastModified,
+    }),
+    width: canvas.width,
+    height: canvas.height,
+  };
 }
